@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.41",
+  "scope": "production-javascript",
+  "generatedFrom": "static local require('./...') relationships and current module boundaries",
+  "counts": {
+    "productionJsFiles": 29,
+    "exportedModules": 26,
+    "internalRequireEdges": 54
+  },
+  "layers": [
+    {
+      "id": "electron-entrypoints",
+      "responsibility": "Processo Electron, bridge segura do renderer e utilitário de pareamento.",
+      "modules": [
+        "main.js",
+        "preload.js",
+        "phase2-pair-device.js"
+      ]
+    },
+    {
+      "id": "application-services",
+      "responsibility": "Casos de uso offline de produto, caixa e venda.",
+      "modules": [
+        "offline-product-service.js",
+        "offline-cash-service.js",
+        "offline-sale-service.js"
+      ]
+    },
+    {
+      "id": "domain-values",
+      "responsibility": "Normalização e cálculos determinísticos sem I/O.",
+      "modules": [
+        "offline-sale-values.js",
+        "offline-fiscal-values.js"
+      ]
+    },
+    {
+      "id": "persistence",
+      "responsibility": "SQLite, migrations, caches, transações atômicas, estoque, caixa, venda, crediário e outboxes.",
+      "modules": [
+        "offline-db.js"
+      ]
+    },
+    {
+      "id": "identity-sync",
+      "responsibility": "Identidade do device, pareamento, transporte HTTP e processamento da outbox geral.",
+      "modules": [
+        "offline-device-auth.js",
+        "offline-device-pairing.js",
+        "offline-sync-http-transport.js",
+        "offline-outbox-worker.js"
+      ]
+    },
+    {
+      "id": "fiscal-credentials",
+      "responsibility": "Provisionamento, armazenamento protegido e material A1.",
+      "modules": [
+        "offline-fiscal-certificate-provisioning.js",
+        "offline-fiscal-certificate-store.js",
+        "offline-fiscal-xml-signer.js"
+      ]
+    },
+    {
+      "id": "fiscal-document",
+      "responsibility": "Geração, assinatura, suplemento QR, DANFE e finalização local da NFC-e.",
+      "modules": [
+        "offline-fiscal-contingency-service.js",
+        "offline-fiscal-nfce-xml.js",
+        "offline-fiscal-nfce-qrcode.js",
+        "offline-fiscal-nfce-danfe.js"
+      ]
+    },
+    {
+      "id": "fiscal-numbering",
+      "responsibility": "Reserva remota, inventário e manutenção de leases de numeração.",
+      "modules": [
+        "offline-fiscal-number-service.js",
+        "offline-fiscal-number-maintenance.js"
+      ]
+    },
+    {
+      "id": "fiscal-orchestration",
+      "responsibility": "Preparação da venda fiscal, outbox fiscal, runtime de reconexão e transporte SVRS.",
+      "modules": [
+        "offline-fiscal-sale-pipeline.js",
+        "offline-fiscal-outbox-worker.js",
+        "offline-fiscal-runtime.js",
+        "offline-fiscal-svrs-transport.js",
+        "offline-fiscal-trust-anchors.js"
+      ]
+    },
+    {
+      "id": "desktop-support",
+      "responsibility": "Standby/rollback e servidor HTTP loopback da interface offline.",
+      "modules": [
+        "offline-standby.js",
+        "offline-ui-server.js"
+      ]
+    }
+  ],
+  "directDependencies": {
+    "main.js": [
+      "offline-cash-service.js",
+      "offline-db.js",
+      "offline-device-auth.js",
+      "offline-device-pairing.js",
+      "offline-fiscal-certificate-provisioning.js",
+      "offline-fiscal-nfce-danfe.js",
+      "offline-fiscal-runtime.js",
+      "offline-outbox-worker.js",
+      "offline-product-service.js",
+      "offline-sale-service.js",
+      "offline-standby.js",
+      "offline-sync-http-transport.js",
+      "offline-ui-server.js"
+    ],
+    "offline-cash-service.js": [
+      "offline-db.js",
+      "offline-device-auth.js"
+    ],
+    "offline-fiscal-certificate-provisioning.js": [
+      "offline-fiscal-certificate-store.js",
+      "offline-sync-http-transport.js"
+    ],
+    "offline-fiscal-contingency-service.js": [
+      "offline-db.js",
+      "offline-fiscal-nfce-xml.js",
+      "offline-fiscal-xml-signer.js"
+    ],
+    "offline-fiscal-nfce-danfe.js": [
+      "offline-db.js",
+      "offline-fiscal-nfce-qrcode.js"
+    ],
+    "offline-fiscal-nfce-qrcode.js": [
+      "offline-db.js",
+      "offline-fiscal-certificate-store.js",
+      "offline-fiscal-values.js",
+      "offline-fiscal-xml-signer.js"
+    ],
+    "offline-fiscal-nfce-xml.js": [
+      "offline-fiscal-values.js"
+    ],
+    "offline-fiscal-number-maintenance.js": [
+      "offline-db.js",
+      "offline-fiscal-number-service.js",
+      "offline-fiscal-values.js"
+    ],
+    "offline-fiscal-number-service.js": [
+      "offline-db.js",
+      "offline-sync-http-transport.js"
+    ],
+    "offline-fiscal-outbox-worker.js": [
+      "offline-db.js",
+      "offline-fiscal-nfce-qrcode.js"
+    ],
+    "offline-fiscal-runtime.js": [
+      "offline-fiscal-outbox-worker.js",
+      "offline-fiscal-svrs-transport.js"
+    ],
+    "offline-fiscal-sale-pipeline.js": [
+      "offline-db.js",
+      "offline-fiscal-certificate-store.js",
+      "offline-fiscal-contingency-service.js",
+      "offline-fiscal-nfce-danfe.js",
+      "offline-fiscal-nfce-qrcode.js"
+    ],
+    "offline-fiscal-svrs-transport.js": [
+      "offline-fiscal-certificate-store.js",
+      "offline-fiscal-trust-anchors.js"
+    ],
+    "offline-fiscal-xml-signer.js": [
+      "offline-fiscal-certificate-store.js"
+    ],
+    "offline-outbox-worker.js": [
+      "offline-db.js"
+    ],
+    "offline-product-service.js": [
+      "offline-db.js",
+      "offline-device-auth.js"
+    ],
+    "offline-sale-service.js": [
+      "offline-db.js",
+      "offline-device-auth.js",
+      "offline-fiscal-sale-pipeline.js",
+      "offline-sale-values.js"
+    ],
+    "phase2-pair-device.js": [
+      "offline-db.js",
+      "offline-device-auth.js",
+      "offline-device-pairing.js"
+    ]
+  },
+  "modules": {
+    "main.js": {
+      "kind": "entrypoint",
+      "responsibility": "Orquestrador principal Electron: lifecycle, janelas, IPC, failover online/offline, timers, sync, fiscal, impressão e updater."
+    },
+    "preload.js": {
+      "kind": "entrypoint",
+      "responsibility": "Bridge context-isolated entre renderer e IPC do processo principal."
+    },
+    "phase2-pair-device.js": {
+      "kind": "utility-entrypoint",
+      "responsibility": "Pareamento de device por linha de comando usando identidade e SQLite locais."
+    },
+    "offline-db.js": {
+      "kind": "persistence-kernel",
+      "responsibility": "Único módulo proprietário do SQLite offline e das transações locais."
+    },
+    "offline-device-auth.js": {
+      "kind": "infrastructure",
+      "responsibility": "Identidade do device/empresa e armazenamento protegido de tokens de sync."
+    },
+    "offline-device-pairing.js": {
+      "kind": "infrastructure",
+      "responsibility": "Contrato de pareamento remoto do device."
+    },
+    "offline-sync-http-transport.js": {
+      "kind": "transport",
+      "responsibility": "HTTP da API e-fisco para sync, bootstrap, referências, caixa e operações autenticadas."
+    },
+    "offline-outbox-worker.js": {
+      "kind": "worker",
+      "responsibility": "Máquina de retry/claim/confirmação da outbox geral."
+    },
+    "offline-product-service.js": {
+      "kind": "application-service",
+      "responsibility": "Busca e projeção de disponibilidade de produtos para venda offline."
+    },
+    "offline-cash-service.js": {
+      "kind": "application-service",
+      "responsibility": "Casos de uso de consulta, abertura, movimento, espelhamento e fechamento de caixa."
+    },
+    "offline-sale-service.js": {
+      "kind": "application-service",
+      "responsibility": "Montagem e registro de venda/crediário offline e ponto de entrada do pipeline fiscal."
+    },
+    "offline-sale-values.js": {
+      "kind": "pure-domain",
+      "responsibility": "Conversões monetárias e de quantidade determinísticas usadas pela venda."
+    },
+    "offline-fiscal-values.js": {
+      "kind": "pure-domain",
+      "responsibility": "Valores fiscais determinísticos: dinheiro, quantidade, percentual, datas, QR e políticas de numeração."
+    },
+    "offline-fiscal-certificate-provisioning.js": {
+      "kind": "application-service",
+      "responsibility": "Busca/provisiona A1 remoto e entrega ao armazenamento local protegido."
+    },
+    "offline-fiscal-certificate-store.js": {
+      "kind": "infrastructure",
+      "responsibility": "Persistência local criptografada do bundle A1 vinculada a empresa/device."
+    },
+    "offline-fiscal-contingency-service.js": {
+      "kind": "application-service",
+      "responsibility": "Gera XML NFC-e, assina com A1 e persiste o documento assinado em contingência."
+    },
+    "offline-fiscal-nfce-xml.js": {
+      "kind": "domain-document",
+      "responsibility": "Geração determinística do XML NFC-e 4.00 sem assinatura."
+    },
+    "offline-fiscal-xml-signer.js": {
+      "kind": "crypto-infrastructure",
+      "responsibility": "Leitura de PKCS#12, XMLDSig e verificação criptográfica."
+    },
+    "offline-fiscal-nfce-qrcode.js": {
+      "kind": "domain-document",
+      "responsibility": "QR Code v3, infNFeSupl e montagem do XML final."
+    },
+    "offline-fiscal-nfce-danfe.js": {
+      "kind": "domain-document",
+      "responsibility": "Parse do XML final e modelos do DANFE de contingência."
+    },
+    "offline-fiscal-number-service.js": {
+      "kind": "application-service",
+      "responsibility": "Reserva remota de faixa fiscal e persistência do lease local."
+    },
+    "offline-fiscal-number-maintenance.js": {
+      "kind": "worker",
+      "responsibility": "Manutenção preventiva do inventário local de numeração fiscal."
+    },
+    "offline-fiscal-sale-pipeline.js": {
+      "kind": "orchestrator",
+      "responsibility": "Decide elegibilidade fiscal e encadeia venda, assinatura, QR, DANFE e criação da fiscal outbox."
+    },
+    "offline-fiscal-outbox-worker.js": {
+      "kind": "worker",
+      "responsibility": "Claim, retry, reconciliação, conflito e estados terminais da fiscal outbox."
+    },
+    "offline-fiscal-runtime.js": {
+      "kind": "orchestrator",
+      "responsibility": "Ciclo de reconexão fiscal: recuperação de SENDING e execução do worker com transporte."
+    },
+    "offline-fiscal-svrs-transport.js": {
+      "kind": "transport",
+      "responsibility": "SOAP de autorização/consulta SVRS e classificação dos retornos fiscais."
+    },
+    "offline-fiscal-trust-anchors.js": {
+      "kind": "infrastructure",
+      "responsibility": "Âncoras TLS usadas pelo transporte SVRS."
+    },
+    "offline-standby.js": {
+      "kind": "desktop-infrastructure",
+      "responsibility": "Manifesto, pacote standby, ativação e rollback de slots offline."
+    },
+    "offline-ui-server.js": {
+      "kind": "desktop-infrastructure",
+      "responsibility": "Servidor HTTP loopback estrito para os arquivos da UI offline."
+    }
+  }
+}

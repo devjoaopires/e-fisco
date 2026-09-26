@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.41",
+  "sourceMap": "architecture/module-responsibilities.json",
+  "sourceDependencyAnalysis": "architecture/dependency-analysis.json",
+  "scope": "runtime-boundaries-db-services-fiscal-sync-ui",
+  "boundaries": [
+    {
+      "id": "sqlite-ownership",
+      "owner": "offline-db.js",
+      "contract": "Somente offline-db.js importa node:sqlite, inicializa/fecha o banco, executa migrations e controla o singleton SQLite.",
+      "status": "enforced-by-current-code",
+      "evidence": {
+        "nodeSqliteImporters": [
+          "offline-db.js"
+        ],
+        "count": 1
+      }
+    },
+    {
+      "id": "raw-sql-access",
+      "owner": "offline-db.js",
+      "contract": "Estado desejado: módulos fora de offline-db.js devem consumir operações persistentes pela API pública de domínio, sem conhecer SQL/tabelas.",
+      "status": "boundary-debt",
+      "currentExceptions": [
+        {
+          "module": "offline-cash-service.js",
+          "prepareCalls": 5,
+          "classification": "application-service-schema-coupling"
+        },
+        {
+          "module": "offline-device-auth.js",
+          "prepareCalls": 2,
+          "classification": "identity-config-schema-coupling",
+          "scope": "local_config"
+        },
+        {
+          "module": "offline-fiscal-number-maintenance.js",
+          "prepareCalls": 3,
+          "classification": "fiscal-numbering-config-schema-coupling",
+          "scope": "local_config"
+        },
+        {
+          "module": "offline-sale-service.js",
+          "prepareCalls": 2,
+          "classification": "application-service-schema-coupling",
+          "scope": "finance sales read model"
+        }
+      ],
+      "totalPrepareCallsOutsideOwner": 12,
+      "candidateForStep74": false,
+      "step74Result": {
+        "mainPrepareCallsBefore": 8,
+        "mainPrepareCallsAfter": 0,
+        "outsideOwnerPrepareCallsBefore": 20,
+        "outsideOwnerPrepareCallsAfter": 12,
+        "outsideOwnerModulesBefore": 5,
+        "outsideOwnerModulesAfter": 4
+      }
+    },
+    {
+      "id": "application-service-to-persistence",
+      "owner": "application-services",
+      "contract": "Serviços de produto, caixa e venda podem depender de contratos de offline-db.js; não devem abrir SQLite nem assumir schema quando houver operação de domínio equivalente.",
+      "status": "partially-respected",
+      "notes": [
+        "offline-product-service.js usa APIs públicas e não contém SQL bruto.",
+        "offline-cash-service.js e offline-sale-service.js ainda possuem SQL bruto e fazem parte da dívida raw-sql-access."
+      ]
+    },
+    {
+      "id": "sale-to-fiscal",
+      "owner": "offline-sale-service.js",
+      "contract": "Venda entra no domínio fiscal somente por offline-fiscal-sale-pipeline.js; módulos documentais/transportes fiscais não devem ser chamados diretamente pelo renderer.",
+      "status": "respected-by-static-graph",
+      "evidence": [
+        "offline-sale-service.js -> offline-fiscal-sale-pipeline.js",
+        "UI -> preload -> main -> offline-sale-service.js"
+      ]
+    },
+    {
+      "id": "fiscal-document-vs-transport",
+      "owner": "fiscal-document",
+      "contract": "XML, assinatura, QR e DANFE não enviam SOAP; transmissão/reconciliação pertencem a runtime/worker/SVRS transport.",
+      "status": "respected-by-static-graph",
+      "documentModules": [
+        "offline-fiscal-contingency-service.js",
+        "offline-fiscal-nfce-xml.js",
+        "offline-fiscal-nfce-qrcode.js",
+        "offline-fiscal-nfce-danfe.js",
+        "offline-fiscal-xml-signer.js"
+      ],
+      "transportModules": [
+        "offline-fiscal-outbox-worker.js",
+        "offline-fiscal-runtime.js",
+        "offline-fiscal-svrs-transport.js"
+      ]
+    },
+    {
+      "id": "general-outbox-vs-transport",
+      "owner": "offline-outbox-worker.js",
+      "contract": "A máquina de estados da outbox geral recebe transporte pelo chamador; não importa offline-sync-http-transport.js diretamente.",
+      "status": "respected-by-static-graph"
+    },
+    {
+      "id": "sync-http-transport",
+      "owner": "offline-sync-http-transport.js",
+      "contract": "Operações autenticadas de sync/API e-fisco usam o transporte dedicado.",
+      "status": "respected-with-explicit-network-exceptions",
+      "networkCoreImporters": [
+        {
+          "module": "main.js",
+          "purpose": "HEAD probe de disponibilidade do Wix"
+        },
+        {
+          "module": "offline-device-pairing.js",
+          "purpose": "pareamento dedicado"
+        },
+        {
+          "module": "offline-fiscal-svrs-transport.js",
+          "purpose": "SOAP fiscal dedicado"
+        },
+        {
+          "module": "offline-standby.js",
+          "purpose": "download de manifesto/pacote standby"
+        },
+        {
+          "module": "offline-sync-http-transport.js",
+          "purpose": "API e-fisco/sync"
+        },
+        {
+          "module": "offline-ui-server.js",
+          "purpose": "HTTP loopback local, não rede externa"
+        }
+      ]
+    },
+    {
+      "id": "renderer-to-privileged-runtime",
+      "owner": "preload.js",
+      "contract": "Renderer não usa Node/IPC diretamente; capacidades privilegiadas são expostas por contextBridge e tratadas no main.",
+      "status": "respected",
+      "electronIsolation": {
+        "contextIsolation": true,
+        "nodeIntegration": false,
+        "sandbox": true
+      },
+      "uiEvidence": {
+        "requireCalls": 0,
+        "ipcRendererReferences": 0,
+        "efiscoDesktopReferences": 44
+      }
+    },
+    {
+      "id": "preload-to-main-ipc",
+      "owner": "preload.js + main.js",
+      "contract": "Todo canal IPC usado pelo preload possui registro correspondente no main e não existem registros do conjunto analisado sem exposição correspondente.",
+      "status": "respected",
+      "preloadChannels": 22,
+      "mainRegisteredChannels": 22,
+      "preloadWithoutMain": 0,
+      "mainWithoutPreload": 0,
+      "mainRegistrationForms": [
+        "ipcMain.handle/ipcMain.on",
+        "instalarOfflineHandler"
+      ]
+    },
+    {
+      "id": "renderer-network",
+      "owner": "offline-ui",
+      "contract": "Acesso privilegiado continua proibido; rede do navegador é uma fronteira separada e deve ser explícita.",
+      "status": "explicit-exceptions",
+      "fetchCalls": 2,
+      "exceptions": [
+        {
+          "purpose": "sonda de conectividade",
+          "target": "https://www.gstatic.com/generate_204"
+        },
+        {
+          "purpose": "carregamento de nomenclatura/NCM oficial",
+          "target": "URL oficial configurada em pdv.html"
+        }
+      ]
+    },
+    {
+      "id": "offline-ui-loopback",
+      "owner": "offline-ui-server.js",
+      "contract": "Arquivos da UI offline são servidos por HTTP loopback; o servidor local não pertence ao transporte externo de sync.",
+      "status": "respected"
+    }
+  ],
+  "step74Extraction": {
+    "focus": "remove-raw-sql-from-main",
+    "status": "completed",
+    "newOfflineDbApis": [
+      "getOutboxStatusSummary",
+      "listAuthorizedNfcePendingSync"
+    ],
+    "reusedOfflineDbApis": [
+      "listCashMovements",
+      "listActiveProvisionedOfflineCredentials",
+      "listPreparedOfflineCompanies",
+      "enqueueOutboxOperation"
+    ],
+    "effects": [
+      "finance snapshot deixa de consultar cash_movements diretamente no main",
+      "outboxStatusSummary deixa de consultar sync_outbox diretamente no main",
+      "enqueueAuthorizedNfceResultSync deixa de conhecer nfce_documents/fiscal_outbox/sync_outbox",
+      "resolução de empresa do operador deixa de conhecer offline_provisioned_credentials/offline_prepared_companies"
+    ]
+  },
+  "remainingCandidates": [
+    {
+      "priority": 1,
+      "candidate": "move-finance-read-model-to-service-or-db-api",
+      "reason": "O read model financeiro ainda é composto entre main.js, offline-sale-service.js e offline-cash-service.js, embora o main já não conheça SQL."
+    },
+    {
+      "priority": 2,
+      "candidate": "encapsulate-local-config",
+      "reason": "offline-device-auth.js e offline-fiscal-number-maintenance.js ainda duplicam acesso SQL à tabela local_config."
+    }
+  ],
+  "observations": [
+    "A fronteira de abertura do SQLite está forte: somente offline-db.js importa node:sqlite.",
+    "A extração do 7.4 removeu todo SQL bruto do main.js; ainda existem doze prepare() fora do kernel em quatro módulos.",
+    "A fronteira renderer/privilegiado está forte no modo Electron atual: isolamento, sandbox e bridge explícito.",
+    "A fronteira fiscal documento/transporte está separada no grafo estático.",
+    "O transporte de sync é dedicado, com exceções de rede de propósito diferente explicitamente identificadas."
+  ]
+}

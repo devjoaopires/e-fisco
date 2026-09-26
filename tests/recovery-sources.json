@@ -1,0 +1,248 @@
+{
+  "step": "3.1/6",
+  "release": "1.0.41",
+  "originalSelfTests": {
+    "phase1-selftest.js": {
+      "found": false,
+      "referencedByCurrentPackage": true,
+      "historicalReferences": [
+        "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step10-build-files-1.0.34\\package.json.bak.20260916-171158-774127",
+        "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step41-homolog-install-20260917\\package.json"
+      ]
+    },
+    "phase2-db-selftest.js": {
+      "found": false,
+      "referencedByCurrentPackage": true,
+      "historicalReferences": [
+        "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step10-build-files-1.0.34\\package.json.bak.20260916-171158-774127",
+        "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step41-homolog-install-20260917\\package.json"
+      ]
+    }
+  },
+  "historicalInstalledPackagesInspected": 8,
+  "historicalInstalledSelfTestsFound": 0,
+  "historicalPhaseLikeRootFile": "phase2-pair-device.js",
+
+  "nodeTestIntegration": {
+
+    "step": "3.4/6",
+
+    "wrappers": [
+
+      "tests/integration/phase1-selftest.test.js",
+
+      "tests/integration/phase2-db-selftest.test.js"
+
+    ],
+
+    "integrationRun": {
+
+      "tests": 3,
+
+      "passed": 3,
+
+      "failed": 0,
+
+      "exitCode": 0
+
+    },
+
+    "fullRun": {
+
+      "tests": 4,
+
+      "passed": 4,
+
+      "failed": 0,
+
+      "exitCode": 0
+
+    },
+
+    "tempLeftovers": 0,
+
+    "stabilityValidation": {
+
+      "step": "3.5/6",
+
+      "cycles": 3,
+
+      "casesPerCycle": [
+
+        "phase1-selftest.js direct",
+
+        "phase2-db-selftest.js direct",
+
+        "full node:test suite"
+
+      ],
+
+      "fullSuiteTestsPerCycle": 4,
+
+      "fullSuitePassedPerCycle": 4,
+
+      "failedRuns": 0,
+
+      "nonZeroExitCodes": 0,
+
+      "tempLeftoversAfterEachCycle": 0,
+
+      "correctionsRequired": false,
+
+      "status": "PASS"
+
+    }
+
+  },
+  "finalization": {
+
+    "step": "3.6/6",
+
+    "legacyScriptsUpdated": {
+
+      "phase1:selftest": "set ELECTRON_RUN_AS_NODE=1&& electron phase1-selftest.js",
+
+      "phase2:db-selftest": "set ELECTRON_RUN_AS_NODE=1&& electron phase2-db-selftest.js"
+
+    },
+
+    "exactPackageScriptValidation": {
+
+      "phase1:selftest": 0,
+
+      "phase2:db-selftest": 0,
+
+      "test:unit": 0,
+
+      "test:integration": 0,
+
+      "test": 0
+
+    },
+
+    "productionBuildIncludes": {
+
+      "testsDirectory": false,
+
+      "testingDocumentation": false,
+
+      "phase1SelfTest": false,
+
+      "phase2DbSelfTest": false
+
+    },
+
+    "tempLeftovers": 0,
+
+    "stageStatus": "COMPLETED"
+
+  },
+
+  "revisions": {
+    "v1.0.34": {
+      "phase1Revision": "slot-rollback-v1",
+      "phase2Revision": "device-pairing-client-argv-v2"
+    },
+    "v1.0.41": {
+      "phase1Revision": "slot-rollback-v1",
+      "phase2Revision": "device-pairing-client-argv-v2"
+    }
+  },
+  "recoverySources": {
+    "standby": {
+      "historicalSource": "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step41-homolog-install-20260917\\app.asar\\offline-standby.js",
+      "currentSource": "offline-standby.js",
+      "historicalSize": 50716,
+      "currentSize": 50716,
+      "historicalSha256": "4368cbe07a8f6173f719bd8b94e813277b9af05630a9891b59a2f31510cdc500",
+      "currentSha256": "4368cbe07a8f6173f719bd8b94e813277b9af05630a9891b59a2f31510cdc500",
+      "byteIdentical": true,
+      "recoveryDecision": "reconstruct against current module with high confidence",
+
+      "reconstructedSelfTest": "phase1-selftest.js",
+
+      "validation": {
+
+        "status": "PASS",
+
+        "exitCode": 0,
+
+        "tempLeftovers": 0,
+
+        "covers": [
+
+          "version comparison",
+
+          "desktop manifest validation",
+
+          "standby package manifest validation",
+
+          "safe ZIP read/extraction",
+
+          "standby directory/state initialization",
+
+          "slot A activation",
+
+          "slot B activation with A becoming rollback-ready",
+
+          "rollback from B to A"
+
+        ]
+
+      }
+    },
+    "database": {
+      "historicalSource": "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-step41-homolog-install-20260917\\app.asar\\offline-db.js",
+      "additionalHistoricalSource": "C:\\Users\\<USER>\\Documents\\e-fisco-backups\\before-open-cash-reader-1.0.34\\offline-db.js",
+      "currentSource": "offline-db.js",
+      "historicalSchemaVersion": 6,
+      "currentSchemaVersion": 13,
+      "historicalSize": 79749,
+      "currentSize": 231426,
+      "historicalSha256": "1f0fa0e5b035c06f0b80cbc08d33e3845c66de3399c71144203f3481b89898a4",
+      "currentSha256": "8ffc4e89d4473b086634db00f18c04c988d71c5d32a012153264dabbdcd79279",
+      "byteIdentical": false,
+      "recoveryDecision": "reconstruct for schema 13 and current public contracts; do not copy legacy assumptions",
+
+      "reconstructedSelfTest": "phase2-db-selftest.js",
+
+      "validation": {
+
+        "status": "PASS",
+
+        "exitCode": 0,
+
+        "tempLeftovers": 0,
+
+        "covers": [
+
+          "schema version 13",
+
+          "migrations 1 through 13",
+
+          "WAL mode",
+
+          "foreign keys enabled",
+
+          "busy timeout 5000ms",
+
+          "database file creation in temporary userData",
+
+          "database reopen and persistence",
+
+          "cash session idempotency",
+
+          "cash movement idempotency",
+
+          "outbox idempotency and ready listing",
+
+          "atomic sale rollback after fiscal allocation failure",
+
+          "PRAGMA integrity_check"
+
+        ]
+
+      }
+    }
+  }
+}

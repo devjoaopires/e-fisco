@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.41",
+  "scope": "current-build-test-ci-baseline",
+  "ci": {
+    "configured": false,
+    "configsFound": [],
+    "providersChecked": [
+      ".github/workflows",
+      "azure-pipelines.yml",
+      "azure-pipelines.yaml",
+      ".gitlab-ci.yml",
+      "appveyor.yml",
+      "appveyor.yaml",
+      "Jenkinsfile",
+      "circle.yml",
+      ".circleci"
+    ]
+  },
+  "package": {
+    "lockfile": "package-lock.json",
+    "lockfileVersion": 3,
+    "enginesDeclared": false,
+    "packageManagerDeclared": false,
+    "npmrcPresent": false,
+    "gitignorePresent": false,
+    "dependencies": 4,
+    "devDependencies": 2,
+    "resolvedToolchain": {
+      "electron": "43.4.1",
+      "electronBuilder": "26.15.3"
+    }
+  },
+  "localValidationRuntime": {
+    "source": "installed e-fisco Electron executable with ELECTRON_RUN_AS_NODE=1",
+    "electron": "43.4.1",
+    "node": "24.18.1",
+    "modulesAbi": "148",
+    "platform": "win32",
+    "arch": "x64",
+    "repositoryNodeModulesPresent": false
+  },
+  "scripts": {
+    "start": {
+      "command": "electron .",
+      "role": "desktop-runtime"
+    },
+    "dist": {
+      "command": "electron-builder --win nsis --publish never",
+      "role": "windows-installer-build"
+    },
+    "test": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/**/*.test.js\" \"tests/integration/**/*.test.js\"",
+      "role": "full-test-suite",
+      "windowsShellSpecific": true
+    },
+    "test:unit": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/**/*.test.js\"",
+      "role": "unit-suite",
+      "windowsShellSpecific": true
+    },
+    "test:integration": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/**/*.test.js\"",
+      "role": "integration-suite",
+      "windowsShellSpecific": true
+    },
+    "test:db": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/db-*.test.js\"",
+      "role": "database-suite",
+      "windowsShellSpecific": true
+    },
+    "test:fiscal": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/fiscal-*.test.js\"",
+      "role": "fiscal-suite",
+      "windowsShellSpecific": true
+    },
+    "test:architecture": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/architecture-*.test.js\" \"tests/integration/architecture-*.test.js\"",
+      "role": "architecture-suite",
+      "windowsShellSpecific": true
+    },
+    "phase1:selftest": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron phase1-selftest.js",
+      "role": "standby-rollback-selftest",
+      "windowsShellSpecific": true
+    },
+    "phase2:db-selftest": {
+      "command": "set ELECTRON_RUN_AS_NODE=1&& electron phase2-db-selftest.js",
+      "role": "database-selftest",
+      "windowsShellSpecific": true
+    },
+    "phase2:pair-device": {
+      "command": "electron phase2-pair-device.js",
+      "role": "operational-cli-not-ci-test"
+    }
+  },
+  "tests": {
+    "files": {
+      "unit": 8,
+      "integration": 14
+    },
+    "baselineResults": {
+      "unit": {
+        "tests": 88,
+        "passed": 88,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "integration": {
+        "tests": 52,
+        "passed": 52,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "db": {
+        "tests": 19,
+        "passed": 19,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "fiscal": {
+        "tests": 28,
+        "passed": 28,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "architecture": {
+        "tests": 9,
+        "passed": 9,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "full": {
+        "tests": 140,
+        "passed": 140,
+        "failed": 0,
+        "exitCode": 0
+      },
+      "phase1Selftest": {
+        "status": "OK",
+        "exitCode": 0
+      },
+      "phase2DbSelftest": {
+        "status": "OK",
+        "exitCode": 0
+      }
+    },
+    "overlapNote": "db, fiscal e architecture são subconjuntos/recortes das suítes unit/integration e não devem ser somados ao total geral."
+  },
+  "build": {
+    "tool": "electron-builder",
+    "target": "nsis",
+    "platform": "win",
+    "arch": "x64",
+    "asar": true,
+    "compression": "maximum",
+    "outputDirectory": "dist",
+    "artifactName": "e-fisco-Setup-${version}.${ext}",
+    "publishConfigured": true,
+    "publishProvider": "generic",
+    "distScriptPublishes": false,
+    "filesEntries": 20,
+    "missingBuildInputs": 0,
+    "wildcards": {
+      "offline-fiscal-*.js": 15,
+      "offline-ui/**": 4
+    },
+    "asarUnpack": [
+      "print-driver-nfce.ps1",
+      "EFISCO-UPDATER.exe"
+    ],
+    "testsPackaged": false,
+    "architectureArtifactsPackaged": false
+  },
+  "localDist": {
+    "present": true,
+    "ciGenerated": false,
+    "keyArtifacts": [
+      "dist/e-fisco-Setup-1.0.41.exe",
+      "dist/e-fisco-Setup-1.0.41.exe.blockmap",
+      "dist/latest.yml",
+      "dist/win-unpacked/e-fisco.exe"
+    ],
+    "note": "Artefato local preexistente; o passo 8.1 não executa build e não o considera evidência de CI reproduzível."
+  },
+  "gapsForNextSteps": [
+    "Nenhuma configuração de CI está versionada.",
+    "package.json não declara engines.node.",
+    "package.json não declara packageManager.",
+    "Scripts de teste usam sintaxe de ambiente do cmd.exe e são específicos de Windows.",
+    "O checkout local não contém node_modules; a CI precisará instalar dependências a partir do package-lock.json.",
+    "Não existe ainda etapa automatizada de instalação limpa, cache, testes por job, build, validação de artefatos ou upload de artefatos.",
+    "O dist local existente não foi produzido por uma pipeline CI e não deve ser reutilizado como saída do workflow."
+  ],
+  "step81Policy": {
+    "workflowCreated": false,
+    "buildExecuted": false,
+    "publishExecuted": false,
+    "productionLogicChanged": false
+  }
+}

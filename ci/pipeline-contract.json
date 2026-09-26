@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 3,
+  "release": "1.0.41",
+  "provider": "hybrid-local-powershell-github-actions",
+  "entrypoints": {
+    "local": "ci/local-ci.ps1",
+    "remote": ".github/workflows/ci.yml"
+  },
+  "purpose": "local-validation-and-remote-ci-release-build",
+  "remoteCi": true,
+  "githubWorkflowPresent": true,
+  "privacy": {
+    "sourceUpload": true,
+    "artifactUpload": true,
+    "publish": false,
+    "secretsRequired": false,
+    "projectUploadByPipeline": false,
+    "externalDownloads": [
+      "Node.js/toolcache resolution performed by actions/setup-node on GitHub-hosted Windows runner",
+      "npm dependencies required by package-lock.json during npm ci",
+      "Node.js portable archive and SHASUMS256.txt from nodejs.org when the local pipeline needs bootstrap"
+    ]
+  },
+  "localPipeline": {
+    "enabled": true,
+    "provider": "local-powershell",
+    "entrypoint": "ci/local-ci.ps1",
+    "remoteUpload": false,
+    "artifactUpload": false,
+    "publish": false
+  },
+  "githubActions": {
+    "enabled": true,
+    "workflowPath": ".github/workflows/ci.yml",
+    "runner": "windows-2025",
+    "node": "24.18.1",
+    "triggers": [
+      "push",
+      "pull_request",
+      "workflow_dispatch"
+    ],
+    "permissions": {
+      "contents": "read"
+    },
+    "actions": {
+      "checkout": "actions/checkout@v7.0.1",
+      "setupNode": "actions/setup-node@v7.0.0",
+      "uploadArtifact": "actions/upload-artifact@v7.0.1"
+    },
+    "jobs": [
+      "unit",
+      "integration",
+      "db",
+      "fiscal",
+      "architecture",
+      "build"
+    ],
+    "buildNeeds": [
+      "unit",
+      "integration",
+      "db",
+      "fiscal",
+      "architecture"
+    ],
+    "dependencyInstall": "npm ci --no-audit --no-fund",
+    "cache": {
+      "type": "npm",
+      "dependencyPath": "package-lock.json",
+      "nodeModulesCached": false
+    },
+    "artifactUpload": {
+      "enabled": true,
+      "afterReleaseValidation": true,
+      "name": "e-fisco-release-${{ github.sha }}",
+      "retentionDays": 14,
+      "compressionLevel": 0,
+      "include": [
+        "dist/e-fisco-Setup-*.exe",
+        "dist/e-fisco-Setup-*.exe.blockmap",
+        "dist/latest.yml"
+      ],
+      "excludeWinUnpacked": true
+    }
+  },
+  "toolchain": {
+    "platform": "windows",
+    "shell": "powershell",
+    "node": "24.18.1",
+    "dependencyInstall": "npm ci --no-audit --no-fund",
+    "nodeBootstrap": {
+      "enabledWhenMissing": true,
+      "source": "https://nodejs.org/dist/",
+      "architecture": "win-x64",
+      "checksum": "SHA-256 verified against SHASUMS256.txt",
+      "cacheDirectory": "%LOCALAPPDATA%/e-fisco-ci/tooling"
+    }
+  },
+  "stages": [
+    {
+      "name": "ci-contract",
+      "command": "npm run test:ci",
+      "expectedBaselineTests": 12
+    },
+    {
+      "name": "unit",
+      "command": "npm run test:unit",
+      "expectedBaselineTests": 100
+    },
+    {
+      "name": "integration",
+      "command": "npm run test:integration",
+      "expectedBaselineTests": 52
+    },
+    {
+      "name": "db",
+      "command": "npm run test:db",
+      "expectedBaselineTests": 19
+    },
+    {
+      "name": "fiscal",
+      "command": "npm run test:fiscal",
+      "expectedBaselineTests": 28
+    },
+    {
+      "name": "architecture",
+      "command": "npm run test:architecture",
+      "expectedBaselineTests": 9
+    },
+    {
+      "name": "phase1-selftest",
+      "command": "npm run phase1:selftest",
+      "expectedStatus": "OK"
+    },
+    {
+      "name": "phase2-db-selftest",
+      "command": "npm run phase2:db-selftest",
+      "expectedStatus": "OK"
+    },
+    {
+      "name": "full-suite",
+      "command": "npm test",
+      "expectedBaselineTests": 152
+    },
+    {
+      "name": "build",
+      "command": "npm run dist",
+      "enabledByDefault": true
+    },
+    {
+      "name": "release-validation",
+      "command": "ci/validate-release.ps1 -DistPath dist",
+      "enabledAfterBuild": true
+    }
+  ],
+  "distribution": {
+    "provider": "generic-r2",
+    "configuredIn": "package.json#build.publish",
+    "automaticUpdateChannel": true,
+    "publishedByGithubWorkflow": false,
+    "publishedByLocalCi": false
+  },
+  "releaseBuild": {
+    "enabled": true,
+    "target": "windows-nsis-x64",
+    "cleanOutputBeforeBuild": true,
+    "publish": false,
+    "validator": "ci/validate-release.ps1",
+    "outputDirectory": "dist",
+    "remoteArtifactUpload": true
+  },
+  "failurePolicy": {
+    "stopOnFirstFailure": true,
+    "nonZeroExitCodeFailsPipeline": true,
+    "packageLockMustRemainUnchanged": true
+  },
+  "cleanup": {
+    "removeNodeModulesWhenCreatedByPipeline": true,
+    "keepNodeModulesSwitch": "-KeepNodeModules",
+    "skipBuildSwitch": "-SkipBuild",
+    "portableNodeCacheOutsideProject": true
+  },
+  "validation": {
+    "productionJsSyntax": {
+      "files": 29,
+      "passed": 29,
+      "failed": 0
+    },
+    "ciContract": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "fullSuite": {
+      "tests": 152,
+      "passed": 152,
+      "failed": 0
+    },
+    "releaseValidatorLocalExistingDist": {
+      "status": "OK",
+      "freshBuild": false,
+      "installerBytes": 107134616,
+      "asarUnpackFiles": 2,
+      "exitCode": 0
+    },
+    "packageLockUnchanged": true,
+    "hybridMaterialization": {
+      "status": "ETAPA_1_COMPLETE",
+      "githubWorkflowPresent": true,
+      "guardrailTests": 12,
+      "guardrailFailures": 0,
+      "releaseValidationExistingDist": "OK",
+      "packageLockUnchanged": true,
+      "rootJavaScriptSyntax": {
+        "files": 31,
+        "passed": 31,
+        "failed": 0
+      },
+      "directFullSuiteAttempt": {
+        "attempted": true,
+        "validCiEquivalent": false,
+        "reason": "checkout sem node_modules; dependencias node-forge e @xmldom/xmldom ausentes",
+        "observedTests": 183,
+        "passed": 179,
+        "failed": 4
+      },
+      "remoteExecutionObserved": false,
+      "freshCiBuildExecuted": false
+    }
+  }
+}

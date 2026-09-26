@@ -1,0 +1,212 @@
+name: e-fisco CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e-fisco-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  npm_config_audit: "false"
+  npm_config_fund: "false"
+
+jobs:
+  unit:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: CI contract
+        run: npm run test:ci
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### unit failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"
+
+  integration:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Integration tests
+        run: npm run test:integration
+      - name: Phase 1 self-test
+        run: npm run phase1:selftest
+      - name: Phase 2 DB self-test
+        run: npm run phase2:db-selftest
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### integration failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"
+
+  db:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: DB tests
+        run: npm run test:db
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### db failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"
+
+  fiscal:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Fiscal tests
+        run: npm run test:fiscal
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### fiscal failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"
+
+  architecture:
+    runs-on: windows-2025
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Architecture tests
+        run: npm run test:architecture
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### architecture failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"
+
+  build:
+    needs:
+      - unit
+      - integration
+      - db
+      - fiscal
+      - architecture
+    runs-on: windows-2025
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24.18.1"
+          cache: npm
+          cache-dependency-path: package-lock.json
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Clean dist
+        shell: pwsh
+        run: |
+          if (Test-Path -LiteralPath dist) {
+            Remove-Item -LiteralPath dist -Recurse -Force
+          }
+      - name: Build NSIS x64
+        run: npm run dist
+      - name: Validate release
+        shell: powershell
+        run: .\ci\validate-release.ps1 -DistPath dist
+      - name: Upload validated release
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: e-fisco-release-${{ github.sha }}
+          path: |
+            dist/e-fisco-Setup-*.exe
+            dist/e-fisco-Setup-*.exe.blockmap
+            dist/latest.yml
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Summarize failure
+        if: failure()
+        shell: pwsh
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### build failed"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- run: ${{ github.run_id }}"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- commit: ${{ github.sha }}"

@@ -1,0 +1,32 @@
+node_modules/
+dist/
+
+# Local logs and temporary files
+*.log
+.step*
+efisco-step*
+*.bak.*
+*.manual-*.bak
+
+# Environment / credentials / local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+*.crt
+
+# Local databases and user data
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

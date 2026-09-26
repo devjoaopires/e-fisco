@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.41",
+  "sourceMap": "architecture/module-responsibilities.json",
+  "scope": "static-local-commonjs-require-graph",
+  "graph": {
+    "nodes": 29,
+    "edges": 54,
+    "stronglyConnectedComponents": 29,
+    "cycleComponents": 0,
+    "acyclic": true,
+    "longestPathEdges": 6,
+    "longestPath": [
+      "main.js",
+      "offline-sale-service.js",
+      "offline-fiscal-sale-pipeline.js",
+      "offline-fiscal-nfce-danfe.js",
+      "offline-fiscal-nfce-qrcode.js",
+      "offline-fiscal-xml-signer.js",
+      "offline-fiscal-certificate-store.js"
+    ]
+  },
+  "entrypointReachability": {
+    "roots": [
+      "main.js",
+      "preload.js",
+      "phase2-pair-device.js"
+    ],
+    "transitiveReach": {
+      "main.js": 24,
+      "preload.js": 0,
+      "phase2-pair-device.js": 3
+    },
+    "combinedReachableIncludingRoots": 27,
+    "notReachableFromEntrypoints": [
+      "offline-fiscal-number-maintenance.js",
+      "offline-fiscal-number-service.js"
+    ],
+    "note": "Os dois módulos não possuem consumidor de produção no grafo CommonJS atual. Eles permanecem empacotados por offline-fiscal-*.js e são exercitados pela suíte de testes; a classificação não afirma que sejam código morto."
+  },
+  "hotspots": [
+    {
+      "module": "main.js",
+      "fanOut": 13,
+      "fanIn": 0,
+      "totalDirectCoupling": 13,
+      "transitiveDependencies": 24,
+      "role": "orchestration-hub",
+      "reason": "Maior fan-out direto e maior alcance transitivo do grafo."
+    },
+    {
+      "module": "offline-db.js",
+      "fanOut": 0,
+      "fanIn": 13,
+      "totalDirectCoupling": 13,
+      "role": "persistence-hub",
+      "reason": "Maior fan-in; mudanças na API de persistência afetam treze consumidores diretos."
+    },
+    {
+      "module": "offline-fiscal-nfce-qrcode.js",
+      "fanOut": 4,
+      "fanIn": 3,
+      "totalDirectCoupling": 7,
+      "transitiveDependencies": 4,
+      "role": "fiscal-document-bridge",
+      "reason": "Maior acoplamento bidirecional entre os módulos de domínio fiscal."
+    },
+    {
+      "module": "offline-fiscal-sale-pipeline.js",
+      "fanOut": 5,
+      "fanIn": 1,
+      "totalDirectCoupling": 6,
+      "transitiveDependencies": 8,
+      "role": "fiscal-orchestrator",
+      "reason": "Coordena cinco colaboradores diretos e oito dependências transitivas."
+    },
+    {
+      "module": "offline-sale-service.js",
+      "fanOut": 4,
+      "fanIn": 1,
+      "totalDirectCoupling": 5,
+      "transitiveDependencies": 11,
+      "role": "application-to-fiscal-bridge",
+      "reason": "Conecta venda, persistência, identidade, valores e pipeline fiscal."
+    },
+    {
+      "module": "offline-device-auth.js",
+      "fanOut": 0,
+      "fanIn": 5,
+      "totalDirectCoupling": 5,
+      "role": "shared-identity-dependency",
+      "reason": "Compartilhado por entrypoints e serviços de aplicação."
+    },
+    {
+      "module": "offline-fiscal-certificate-store.js",
+      "fanOut": 0,
+      "fanIn": 5,
+      "totalDirectCoupling": 5,
+      "role": "shared-fiscal-credential-dependency",
+      "reason": "Compartilhado por provisionamento, QR, pipeline, transporte e signer."
+    }
+  ],
+  "topTransitiveDependencyCounts": [
+    {
+      "module": "main.js",
+      "count": 24
+    },
+    {
+      "module": "offline-sale-service.js",
+      "count": 11
+    },
+    {
+      "module": "offline-fiscal-runtime.js",
+      "count": 8
+    },
+    {
+      "module": "offline-fiscal-sale-pipeline.js",
+      "count": 8
+    },
+    {
+      "module": "offline-fiscal-contingency-service.js",
+      "count": 5
+    },
+    {
+      "module": "offline-fiscal-nfce-danfe.js",
+      "count": 5
+    },
+    {
+      "module": "offline-fiscal-outbox-worker.js",
+      "count": 5
+    }
+  ],
+  "sharedDependencies": [
+    {
+      "module": "offline-db.js",
+      "fanIn": 13,
+      "directDependents": [
+        "main.js",
+        "offline-cash-service.js",
+        "offline-fiscal-contingency-service.js",
+        "offline-fiscal-nfce-danfe.js",
+        "offline-fiscal-nfce-qrcode.js",
+        "offline-fiscal-number-maintenance.js",
+        "offline-fiscal-number-service.js",
+        "offline-fiscal-outbox-worker.js",
+        "offline-fiscal-sale-pipeline.js",
+        "offline-outbox-worker.js",
+        "offline-product-service.js",
+        "offline-sale-service.js",
+        "phase2-pair-device.js"
+      ]
+    },
+    {
+      "module": "offline-device-auth.js",
+      "fanIn": 5,
+      "directDependents": [
+        "main.js",
+        "offline-cash-service.js",
+        "offline-product-service.js",
+        "offline-sale-service.js",
+        "phase2-pair-device.js"
+      ]
+    },
+    {
+      "module": "offline-fiscal-certificate-store.js",
+      "fanIn": 5,
+      "directDependents": [
+        "offline-fiscal-certificate-provisioning.js",
+        "offline-fiscal-nfce-qrcode.js",
+        "offline-fiscal-sale-pipeline.js",
+        "offline-fiscal-svrs-transport.js",
+        "offline-fiscal-xml-signer.js"
+      ]
+    },
+    {
+      "module": "offline-fiscal-nfce-qrcode.js",
+      "fanIn": 3,
+      "directDependents": [
+        "offline-fiscal-nfce-danfe.js",
+        "offline-fiscal-outbox-worker.js",
+        "offline-fiscal-sale-pipeline.js"
+      ]
+    }
+  ],
+  "largestLayerRelations": [
+    {
+      "from": "electron-entrypoints",
+      "to": "identity-sync",
+      "edges": 6
+    },
+    {
+      "from": "fiscal-orchestration",
+      "to": "fiscal-document",
+      "edges": 4
+    },
+    {
+      "from": "application-services",
+      "to": "identity-sync",
+      "edges": 3
+    },
+    {
+      "from": "application-services",
+      "to": "persistence",
+      "edges": 3
+    },
+    {
+      "from": "electron-entrypoints",
+      "to": "application-services",
+      "edges": 3
+    },
+    {
+      "from": "fiscal-document",
+      "to": "fiscal-credentials",
+      "edges": 3
+    },
+    {
+      "from": "fiscal-document",
+      "to": "persistence",
+      "edges": 3
+    }
+  ],
+  "observations": [
+    "O grafo estático local é um DAG: não há ciclos de require entre os 29 módulos de produção.",
+    "main.js e offline-db.js formam os dois extremos de concentração: um concentra orquestração de saída, o outro dependentes de entrada.",
+    "offline-fiscal-nfce-qrcode.js é o principal módulo-ponte dentro do subgrafo fiscal documental.",
+    "offline-sale-service.js amplia seu acoplamento transitivo ao entrar no pipeline fiscal, alcançando onze módulos abaixo dele.",
+    "offline-fiscal-number-maintenance.js e offline-fiscal-number-service.js formam uma ilha estática não alcançada pelas raízes executáveis atuais."
+  ]
+}

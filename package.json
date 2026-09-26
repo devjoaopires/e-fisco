@@ -1,0 +1,102 @@
+{
+  "name": "e-fisco-desktop",
+  "version": "1.0.41",
+  "description": "e-fisco Desktop - aplicação Electron para operação fiscal e comercial com continuidade offline e NFC-e.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --publish never",
+
+    "test": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/**/*.test.js\" \"tests/integration/**/*.test.js\"",
+
+    "test:unit": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/**/*.test.js\"",
+
+    "test:electron-security": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/electron-navigation-security.test.js\" \"tests/unit/electron-webcontents-security.test.js\" \"tests/unit/electron-ipc-security.test.js\" \"tests/unit/electron-security-bypass.test.js\" \"tests/unit/electron-functional-regression.test.js\" \"tests/unit/electron-static-security-audit.test.js\" \"tests/unit/electron-security-suite-contract.test.js\"",
+
+    "test:integration": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/**/*.test.js\"",
+    "test:db": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/db-*.test.js\"",
+    "test:fiscal": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/fiscal-*.test.js\"",
+    "test:architecture": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/architecture-*.test.js\" \"tests/integration/architecture-*.test.js\"",
+    "test:ci": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/ci-workflow-contract.test.js\"",
+    "ci:local": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\ci\\local-ci.ps1",
+    "phase1:selftest": "set ELECTRON_RUN_AS_NODE=1&& electron phase1-selftest.js",
+    "phase2:db-selftest": "set ELECTRON_RUN_AS_NODE=1&& electron phase2-db-selftest.js",
+    "phase2:pair-device": "electron phase2-pair-device.js"
+  },
+  "build": {
+    "appId": "com.efisco.desktop",
+    "productName": "e-fisco",
+    "asar": true,
+    "compression": "maximum",
+    "files": [
+      "main.js",
+      "preload.js",
+      "ajuste.css",
+      "icone_app.ico",
+      "print-driver-nfce.ps1",
+      "EFISCO-UPDATER.exe",
+      "offline-standby.js",
+      "offline-db.js",
+      "offline-outbox-worker.js",
+      "offline-sync-http-transport.js",
+      "offline-device-auth.js",
+      "offline-device-pairing.js",
+      "offline-product-service.js",
+      "offline-cash-service.js",
+      "offline-sale-service.js",
+
+      "offline-sale-values.js",
+      "offline-fiscal-*.js",
+      "offline-ui-server.js",
+      "offline-ui/**",
+      "phase2-pair-device.js"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icone_app.ico",
+      "artifactName": "e-fisco-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "e-fisco",
+      "deleteAppDataOnUninstall": false
+    },
+    "asarUnpack": [
+      "print-driver-nfce.ps1",
+      "EFISCO-UPDATER.exe"
+    ],
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://pub-4d0d351761384c2a96916e9f41d70d06.r2.dev"
+      }
+    ]
+  },
+  "dependencies": {
+    "@xmldom/xmldom": "0.9.12",
+    "electron-updater": "^6.8.9",
+    "node-forge": "1.4.0",
+    "xml-crypto": "6.1.2"
+  },
+  "devDependencies": {
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "phase1Revision": "slot-rollback-v1",
+  "phase2Revision": "device-pairing-client-argv-v2"
+}
+
