@@ -7,16 +7,107 @@ const {
   openCashSession,
   closeCashSession,
   registerCashMovement,
+  listCashMovements,
   aggregateCashSessionActivity,
-  enqueueOutboxOperation
+  enqueueOutboxOperation,
+  getOutboxOperation,
+  getPreparedOfflineCompany
 } = require('./offline-db');
 
 const {
   getSyncEmpresaId
 } = require('./offline-device-auth');
 
+const CASH_REPOSITORY_CONTEXT_PROPERTY =
+  '__efiscoCashRepository';
+const CASH_READ_MODEL_CONTEXT_PROPERTY =
+  '__efiscoCashReadModel';
+
+function cashRepository(db) {
+  const repository =
+    db &&
+    db[CASH_REPOSITORY_CONTEXT_PROPERTY];
+
+  if (
+    !repository ||
+    typeof repository.beginImmediateTransaction !==
+      'function' ||
+    typeof repository.updateCashSessionPayload !==
+      'function'
+  ) {
+    throw new Error(
+      'Repository de caixa offline não está disponível.'
+    );
+  }
+
+  return repository;
+}
+
+function cashReadModel(db) {
+  const readModel =
+    db &&
+    db[CASH_READ_MODEL_CONTEXT_PROPERTY];
+
+  if (
+    !readModel ||
+    typeof readModel.latestCloseDependency !==
+      'function' ||
+    typeof readModel.sessionDependencies !==
+      'function' ||
+    typeof readModel.findCashCloseOperationId !==
+      'function'
+  ) {
+    throw new Error(
+      'Read-model de caixa offline não está disponível.'
+    );
+  }
+
+  return readModel;
+}
+
 function text(value) {
   return String(value == null ? '' : value).trim();
+}
+
+function objectValue(value) {
+  return value &&
+    typeof value === 'object' &&
+    !Array.isArray(value)
+    ? value
+    : {};
+}
+
+function assertExistingCashOperation(
+  operation,
+  expectedType,
+  expectedEntityId
+) {
+  if (!operation) return null;
+
+  if (
+    operation.type !== expectedType ||
+    operation.entityId !== expectedEntityId
+  ) {
+    throw new Error(
+      `operationId ${operation.operationId} já existe com outro tipo ou entidade.`
+    );
+  }
+
+  return operation;
+}
+
+function assertSameCashRetryPayload(
+  operation,
+  expectedPayload
+) {
+  if (
+    JSON.stringify(objectValue(operation.payload)) !==
+    JSON.stringify(expectedPayload)
+  ) {
+    throw new Error(
+      `operationId ${operation.operationId} já existe com outro payload ou dependências.`
+    );
+  }
 }
 
 function resolveEmpresaId(input = {}) {
@@ -56,11 +147,7 @@ function centsToValue(cents) {
   return Math.round((Number(cents || 0) / 100 + Number.EPSILON) * 100) / 100;
 }
 
-function parsePayload(value) {
-  if (!value) return {};
-  if (typeof value === 'object') return value;
-  try { return JSON.parse(String(value)); } catch (_) { return {}; }
-}
+
 
 function cashSessionUi(session, resumo = null) {
   if (!session) return null;
@@ -259,41 +346,20 @@ function buildCashSummary(empresaId, session) {
 }
 
 function latestCloseDependency(db, empresaId) {
-  const row = db.prepare(`
-    SELECT operation_id
-      FROM sync_outbox
-     WHERE empresa_id = ?
-       AND type = 'CASH_CLOSE'
-     ORDER BY created_at DESC, operation_id DESC
-     LIMIT 1
-  `).get(empresaId);
-  return row ? [String(row.operation_id)] : [];
+  return cashReadModel(db)
+    .latestCloseDependency(empresaId);
 }
 
-function sessionDependencies(db, empresaId, sessionId) {
-  const rows = db.prepare(`
-    SELECT operation_id, type, entity_id, payload_json
-      FROM sync_outbox
-     WHERE empresa_id = ?
-       AND type IN ('CASH_OPEN', 'CASH_MOVEMENT', 'SALE_PAID')
-     ORDER BY created_at, operation_id
-  `).all(empresaId);
-
-  const dependencies = [];
-  for (const row of rows) {
-    const payload = parsePayload(row.payload_json);
-    let belongs = false;
-    if (row.type === 'CASH_OPEN') {
-      belongs = String(row.entity_id) === sessionId;
-    } else if (row.type === 'CASH_MOVEMENT') {
-      belongs = text(payload.sessionId) === sessionId;
-    } else if (row.type === 'SALE_PAID') {
-      belongs = Array.isArray(payload.cashMovements) &&
-        payload.cashMovements.some((movement) => text(movement && movement.sessionId) === sessionId);
-    }
-    if (belongs) dependencies.push(String(row.operation_id));
-  }
-  return [...new Set(dependencies)];
+function sessionDependencies(
+  db,
+  empresaId,
+  sessionId
+) {
+  return cashReadModel(db)
+    .sessionDependencies(
+      empresaId,
+      sessionId
+    );
 }
 
 function mirrorRemoteCashState(state = {}) {
@@ -343,11 +409,12 @@ function mirrorRemoteCashState(state = {}) {
           normalizeRemoteSummaryBase(localOpen.payload && localOpen.payload.remoteSummaryBase),
         mirroredAt: new Date().toISOString()
       };
-      db.prepare(`
-        UPDATE cash_sessions
-           SET payload_json = ?
-         WHERE empresa_id = ? AND session_id = ?
-      `).run(JSON.stringify(nextPayload), empresaId, sessionId);
+      cashRepository(db)
+        .updateCashSessionPayload(
+          empresaId,
+          sessionId,
+          nextPayload
+        );
     }
   } else if (localOpen) {
     const payload = localOpen.payload && typeof localOpen.payload === 'object'
@@ -398,15 +465,103 @@ function openCashOffline(input = {}) {
   const saldoInicialCentavos = decimalToCents(input.saldoInicial, 'Saldo inicial');
   const sessionId = `offline-cash:${empresaId}:${requestId}`;
   const operationId = `cash-open:${sessionId}`;
+  const ambienteRecebido =
+    text(
+      input.fiscalEnvironment ||
+      input.ambiente
+    ).toUpperCase();
+
+  const existingOperation =
+    assertExistingCashOperation(
+      getOutboxOperation(
+        empresaId,
+        operationId
+      ),
+      'CASH_OPEN',
+      sessionId
+    );
+
+  if (existingOperation) {
+    const existingPayload =
+      objectValue(existingOperation.payload);
+    const retryEnvironment =
+      ['PRODUCAO', 'HOMOLOGACAO']
+        .includes(ambienteRecebido)
+        ? ambienteRecebido
+        : text(
+            existingPayload.fiscalEnvironment
+          ).toUpperCase();
+
+    assertSameCashRetryPayload(
+      existingOperation,
+      {
+        sessionId,
+        openingBalanceCentavos:
+          saldoInicialCentavos,
+        openedAt: text(
+          existingPayload.openedAt
+        ),
+        observacao: text(input.observacao),
+        operadorId: text(
+          input.operadorId ||
+          input.operatorId
+        ),
+        operadorNome: text(
+          input.operadorNome ||
+          input.nomeOperador ||
+          input.operatorName
+        ),
+        operadorPerfil: text(
+          input.operadorPerfil ||
+          input.perfilOperador
+        ),
+        fiscalEnvironment:
+          retryEnvironment,
+        offline: true
+      }
+    );
+
+    const session =
+      getCashSession(
+        empresaId,
+        sessionId
+      );
+
+    if (!session) {
+      throw new Error(
+        'Operação de abertura do caixa existe sem a sessão local correspondente.'
+      );
+    }
+
+    const aberto =
+      session.status === 'OPEN';
+    const resumo =
+      aberto
+        ? buildCashSummary(
+            empresaId,
+            session
+          )
+        : null;
+
+    return {
+      success: true,
+      aberto,
+      caixa:
+        cashSessionUi(
+          session,
+          resumo
+        ),
+      message:
+        aberto
+          ? 'O caixa já estava aberto.'
+          : 'A operação de abertura já estava registrada e o caixa está fechado.'
+    };
+  }
+
   const openedAt = new Date().toISOString();
   const dependencies = latestCloseDependency(db, empresaId);
-  const prepared = db.prepare(`
-    SELECT ambiente
-      FROM offline_prepared_companies
-     WHERE empresa_id = ?
-     LIMIT 1
-  `).get(empresaId);
-  const ambienteRecebido = text(input.fiscalEnvironment || input.ambiente).toUpperCase();
+  const prepared =
+    getPreparedOfflineCompany(empresaId);
   const ambientePreparado = text(prepared && prepared.ambiente).toUpperCase();
   const fiscalEnvironment =
     ['PRODUCAO', 'HOMOLOGACAO'].includes(ambienteRecebido)
@@ -438,7 +593,9 @@ function openCashOffline(input = {}) {
     offline: true
   };
 
-  db.exec('BEGIN IMMEDIATE;');
+  const transaction =
+    cashRepository(db)
+      .beginImmediateTransaction();
   try {
     const opened = openCashSession({
       empresaId,
@@ -457,7 +614,7 @@ function openCashOffline(input = {}) {
       dependencies,
       createdAt: openedAt
     });
-    db.exec('COMMIT;');
+    transaction.commit();
     return {
       success: true,
       aberto: true,
@@ -465,7 +622,7 @@ function openCashOffline(input = {}) {
       message: opened.duplicate ? 'O caixa já estava aberto.' : 'Caixa aberto com sucesso.'
     };
   } catch (error) {
-    try { db.exec('ROLLBACK;'); } catch (_) {}
+    transaction.rollback();
     throw error;
   }
 }
@@ -516,7 +673,92 @@ function registerCashMovementOffline(input = {}) {
   };
   if (!movementPayload.motivo) throw new Error('Informe o motivo do movimento de caixa.');
 
-  db.exec('BEGIN IMMEDIATE;');
+  const existingOperation =
+    assertExistingCashOperation(
+      getOutboxOperation(
+        empresaId,
+        operationId
+      ),
+      'CASH_MOVEMENT',
+      movementId
+    );
+
+  if (existingOperation) {
+    const existingPayload =
+      objectValue(existingOperation.payload);
+
+    assertSameCashRetryPayload(
+      existingOperation,
+      {
+        movementId,
+        sessionId: session.sessionId,
+        direction,
+        amountCentavos,
+        movementType: type,
+        sourceId: movementId,
+        occurredAt: text(
+          existingPayload.occurredAt
+        ),
+        payload: movementPayload
+      }
+    );
+
+    const storedMovement =
+      listCashMovements({
+        empresaId,
+        sessionId: session.sessionId,
+        limit: 5000
+      }).find(
+        (item) =>
+          item.movementId === movementId
+      );
+
+    if (!storedMovement) {
+      throw new Error(
+        'Operação de movimento do caixa existe sem o lançamento local correspondente.'
+      );
+    }
+
+    const resumo =
+      buildCashSummary(
+        empresaId,
+        session
+      );
+
+    return {
+      success: true,
+      idempotente: true,
+      movimento: {
+        id: movementId,
+        caixaSessaoId: session.sessionId,
+        tipo: type,
+        valor:
+          centsToValue(signedCentavos),
+        motivo: movementPayload.motivo,
+        fornecedorId:
+          movementPayload.fornecedorId,
+        fornecedorNome:
+          movementPayload.fornecedorNome,
+        descricao:
+          movementPayload.descricao,
+        operadorNome:
+          movementPayload.operadorNome,
+        operadorId:
+          movementPayload.operadorId,
+        criadoEm:
+          storedMovement.occurredAt
+      },
+      saldoEsperado:
+        resumo.saldoEsperado,
+      resumo,
+      message:
+        `${type} já estava registrada.`
+    };
+  }
+
+  const transaction =
+    cashRepository(db)
+      .beginImmediateTransaction();
   try {
     const movement = registerCashMovement({
       empresaId,
@@ -551,7 +793,7 @@ function registerCashMovementOffline(input = {}) {
           : [session.operationId],
       createdAt: occurredAt
     });
-    db.exec('COMMIT;');
+    transaction.commit();
     const resumo = buildCashSummary(empresaId, session);
     return {
       success: true,
@@ -574,7 +816,7 @@ function registerCashMovementOffline(input = {}) {
       message: movement.duplicate ? `${type} já estava registrada.` : `${type} registrada com sucesso.`
     };
   } catch (error) {
-    try { db.exec('ROLLBACK;'); } catch (_) {}
+    transaction.rollback();
     throw error;
   }
 }
@@ -587,11 +829,12 @@ function closeCashOffline(input = {}) {
   const session = getCashSession(empresaId, sessionId);
   if (!session) throw new Error('A sessão de caixa informada não existe.');
 
-  const existingClose = db.prepare(`
-    SELECT operation_id FROM sync_outbox
-     WHERE empresa_id = ? AND type = 'CASH_CLOSE' AND entity_id = ?
-     ORDER BY created_at DESC LIMIT 1
-  `).get(empresaId, sessionId);
+  const existingClose =
+    cashReadModel(db)
+      .findCashCloseOperationId(
+        empresaId,
+        sessionId
+      );
   if (session.status === 'CLOSED' && existingClose) {
     const payload = session.payload && typeof session.payload === 'object' ? session.payload : {};
     return {
@@ -633,7 +876,9 @@ function closeCashOffline(input = {}) {
     offline: true
   };
 
-  db.exec('BEGIN IMMEDIATE;');
+  const transaction =
+    cashRepository(db)
+      .beginImmediateTransaction();
   try {
     const closed = closeCashSession({
       empresaId,
@@ -663,7 +908,7 @@ function closeCashOffline(input = {}) {
       dependencies,
       createdAt: closedAt
     });
-    db.exec('COMMIT;');
+    transaction.commit();
     return {
       success: true,
       aberto: false,
@@ -680,7 +925,7 @@ function closeCashOffline(input = {}) {
       message: closed.duplicate ? 'Caixa já estava fechado.' : 'Caixa fechado com sucesso no modo offline.'
     };
   } catch (error) {
-    try { db.exec('ROLLBACK;'); } catch (_) {}
+    transaction.rollback();
     throw error;
   }
 }

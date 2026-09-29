@@ -5,6 +5,10 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const navigationPolicyModule =
+  require('../../desktop/security/navigation-policy');
+const ipcAuthorizationModule =
+  require('../../desktop/security/ipc-authorization');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const MAIN_SOURCE = fs.readFileSync(
@@ -105,8 +109,8 @@ function buildHarness() {
   let updaterCalls = 0;
 
   const mainFrame = makeFrame({
-    url: 'https://jpiresoficial.wixstudio.com/e-fisco',
-    origin: 'https://jpiresoficial.wixstudio.com',
+    url: 'https://plataforma.e-fisco.app/',
+    origin: 'https://plataforma.e-fisco.app',
     processId: 101,
     routingId: 201
   });
@@ -148,6 +152,8 @@ function buildHarness() {
 
   const sandbox = {
     URL,
+    navigationPolicyModule,
+    ipcAuthorizationModule,
     Object,
     String,
     Number,
@@ -173,7 +179,9 @@ function buildHarness() {
       updaterCalls += 1;
       return Promise.resolve();
     },
-    versaoAtualizacaoPendente: null,
+    getVersaoAtualizacaoPendente() {
+      return null;
+    },
     paginaAtualizacaoObrigatoria() {
       return 'data:text/html,update';
     }
@@ -187,11 +195,13 @@ function buildHarness() {
     'const PRINTER_NAME ='
   );
 
-  const securityPolicyBlock = sliceBetween(
-    MAIN_SOURCE,
-    'let offlineUiServer = null;',
-    'let timerOfflineRuntime = null;'
-  );
+  const securityPolicyBlock =
+    'let offlineUiServer = null;\n' +
+    sliceBetween(
+      MAIN_SOURCE,
+      'const NAVIGATION_POLICY_CONTEXT =',
+      "let offlineUiMode = 'ONLINE';"
+    );
 
   const ipcPolicyBlock = sliceBetween(
     MAIN_SOURCE,
@@ -306,7 +316,7 @@ test('mainWindow confiável permite navegação e IPC, mas nunca popup', () => {
   assert.equal(
     runNavigate(
       h.mainHandlers['will-navigate'],
-      'https://jpiresoficial.wixstudio.com/outra-rota'
+      'https://plataforma.e-fisco.app/outra-rota'
     ),
     0
   );
@@ -315,7 +325,7 @@ test('mainWindow confiável permite navegação e IPC, mas nunca popup', () => {
     JSON.parse(
       JSON.stringify(
         h.mainPopup()({
-          url: 'https://jpiresoficial.wixstudio.com/outra-rota'
+          url: 'https://plataforma.e-fisco.app/outra-rota'
         })
       )
     ),
@@ -392,7 +402,7 @@ test('event.url malicioso vence argumento seguro e não deixa IPC residual', () 
   assert.equal(
     runNavigate(
       h.mainHandlers['will-navigate'],
-      'https://jpiresoficial.wixstudio.com/e-fisco',
+      'https://plataforma.e-fisco.app/',
       {
         url: 'https://evil.example/',
         isMainFrame: true

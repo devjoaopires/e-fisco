@@ -71,6 +71,10 @@ $package = Get-Content -LiteralPath $packagePath -Raw | ConvertFrom-Json
 $version = [string]$package.version
 Assert-Condition (-not [string]::IsNullOrWhiteSpace($version)) 'package.json sem version'
 
+$secretBoundaryValidator = Join-Path $root 'ci\validate-code-signing-secret-boundary.ps1'
+Assert-Condition (Test-Path -LiteralPath $secretBoundaryValidator -PathType Leaf) "Validador de fronteira de secrets ausente: $secretBoundaryValidator"
+& $secretBoundaryValidator
+
 Assert-Condition ([string]$package.build.directories.output -eq 'dist') 'build.directories.output deve ser dist'
 Assert-Condition ([bool]$package.build.asar) 'build.asar deve permanecer habilitado'
 Assert-Condition ([string]$package.build.win.artifactName -eq 'e-fisco-Setup-${version}.${ext}') 'artifactName inesperado'
@@ -124,6 +128,10 @@ $actualSha512 = Get-Sha512Base64 $installerPath
 foreach ($match in $shaMatches) {
   Assert-Condition ($match.Groups[1].Value.Trim() -eq $actualSha512) 'latest.yml sha512 divergente do instalador'
 }
+
+$inventoryValidator = Join-Path $root 'ci\validate-code-signing-inventory.ps1'
+Assert-Condition (Test-Path -LiteralPath $inventoryValidator -PathType Leaf) "Validador de inventario de code signing ausente: $inventoryValidator"
+& $inventoryValidator -DistPath $DistPath
 
 Write-Output "RELEASE_VERSION=$version"
 Write-Output "RELEASE_INSTALLER=$artifactName"

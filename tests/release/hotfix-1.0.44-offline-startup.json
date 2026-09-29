@@ -1,0 +1,83 @@
+{
+  "release": "1.0.44",
+  "capturedAt": "2026-09-28",
+  "trigger": "real-world-offline-startup-white-window",
+  "rootCause": {
+    "databaseFileExisted": true,
+    "schemaVersion": 13,
+    "recordedMigrationV8": "single-owner-nfce-number-reservations",
+    "previousExpectedMigrationV8": "single-owner-nfce-numbering-legacy",
+    "bootstrapFailure": "Histórico de migrations SQLite incompatível na V8",
+    "secondaryDiagnostics": [
+      "OFFLINE-DB-001",
+      "OFFLINE-COMPANY-001",
+      "OFFLINE-AUTH-002"
+    ],
+    "rendererHealthy": true,
+    "loopbackServerHealthy": true
+  },
+  "fix": {
+    "canonicalMigrationV8": "single-owner-nfce-number-reservations",
+    "acceptedMigrationV8Names": [
+      "single-owner-nfce-number-reservations",
+      "single-owner-nfce-numbering-legacy"
+    ],
+    "doesNotRewriteExistingHistory": true,
+    "forcedDiagnosticAllowedWhileOnlineMode": true,
+    "blockedFailoverShowsDiagnostic": true,
+    "bootstrapTechnicalDetailSanitized": true,
+    "diagnosticHtmlEscapesDetail": true
+  },
+  "realDatabaseCopyValidation": {
+    "originalDatabaseModified": false,
+    "copyOpened": true,
+    "probeOk": true,
+    "schemaVersion": 13,
+    "preparedCompanies": 2,
+    "provisionedCredentials": 4,
+    "activeOperatorCredentials": 2,
+    "temporaryCopyRemoved": true
+  },
+  "tests": {
+    "migrationCompatibility": {
+      "tests": 4,
+      "passed": 4
+    },
+    "targetedHotfixContracts": {
+      "tests": 94,
+      "passed": 94
+    },
+    "fullUnitIntegration": {
+      "tests": 604,
+      "passed": 604,
+      "failed": 0
+    },
+    "scale": {
+      "tests": 3,
+      "passed": 3
+    },
+    "resilience": {
+      "tests": 8,
+      "passed": 8
+    },
+    "desktopE2E": {
+      "tests": 1,
+      "passed": 1
+    }
+  },
+  "build": {
+    "status": "VALIDATED_QA_UNSIGNED",
+    "installer": "dist/e-fisco-Setup-1.0.44.exe",
+    "installerBytes": 107189327,
+    "installerSha256": "7A6BD81614428FA7CDD0477467A71D9A12A14A2E0DDD15A54E1A5C7AFB1615C2",
+    "installerSha512": "NlLHrnCCgVYHhCQoaOU1hSyKCtTtnWC0jX4mgZDEcoXhoxiQjRGeqv7o386d8QF7bHSr4aMCRpAhkv0RrLeS5w==",
+    "applicationSha256": "CF1D6AE1C8D99ED7F6F5B8C56AECFFE887C0DEB18B03B17B5BB7D42E25CF9E66",
+    "releaseValidator": "OK",
+    "asarSourceHashMatch": true,
+    "backupFilesPacked": 0,
+    "testFilesPacked": 0,
+    "environmentFilesPacked": 0,
+    "upgradeFrom1043": "OK",
+    "signature": "NotSigned"
+  }
+}

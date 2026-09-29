@@ -1,0 +1,31 @@
+  /*
+   * visibility preserva as medidas e deixa o navegador calcular o layout,
+   * mas evita mostrar o estado intermediário que dá a impressão de resize.
+   * O fundo do body continua visível.
+   */
+  html.scf-layout-settling body > *,
+  html.scf-access-pending body > *{
+    visibility:hidden !important;
+  }
+
+  html.scf-layout-settling *,
+  html.scf-layout-settling *::before,
+  html.scf-layout-settling *::after,
+  html.scf-access-pending *,
+  html.scf-access-pending *::before,
+  html.scf-access-pending *::after{
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important;
+  }
+
+  /*
+   * Usa a viewport dinâmica quando suportada, reduzindo o salto
+   * causado pela mudança da altura útil do navegador após o login.
+   */
+  @supports (height: 100dvh){
+    html,
+    body{
+      min-height:100dvh !important;
+    }
+  }

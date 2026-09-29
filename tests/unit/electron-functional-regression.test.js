@@ -5,6 +5,10 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const navigationPolicyModule =
+  require('../../desktop/security/navigation-policy');
+const ipcAuthorizationModule =
+  require('../../desktop/security/ipc-authorization');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const MAIN_SOURCE = fs.readFileSync(
@@ -30,7 +34,11 @@ function sliceBetween(source, startMarker, endMarker) {
   return source.slice(start, end);
 }
 
-function ipcHandleBlock(channel, nextChannel) {
+function ipcHandleBlock(
+  channel,
+  nextChannel,
+  options = {}
+) {
   const channelMarker =
     "'" + channel + "'";
 
@@ -69,23 +77,30 @@ function ipcHandleBlock(channel, nextChannel) {
     'ipcMain.handle não encontrado: ' + channel
   );
 
+  const nextMarker =
+    options.rawNextMarker === true
+      ? nextChannel
+      : "'" + nextChannel + "'";
+
   const nextPos =
     MAIN_SOURCE.indexOf(
-      "'" + nextChannel + "'",
+      nextMarker,
       channelPos + channelMarker.length
     );
 
   assert.notEqual(
     nextPos,
     -1,
-    'Próximo canal IPC não encontrado: ' + nextChannel
+    'Próximo marcador IPC não encontrado: ' + nextChannel
   );
 
   const end =
-    MAIN_SOURCE.lastIndexOf(
-      'ipcMain.handle(',
-      nextPos
-    );
+    options.rawNextMarker === true
+      ? nextPos
+      : MAIN_SOURCE.lastIndexOf(
+          'ipcMain.handle(',
+          nextPos
+        );
 
   assert.ok(
     end > start,
@@ -132,8 +147,8 @@ function buildHarness() {
   };
 
   const mainFrame = makeFrame({
-    url: 'https://jpiresoficial.wixstudio.com/e-fisco',
-    origin: 'https://jpiresoficial.wixstudio.com',
+    url: 'https://plataforma.e-fisco.app/',
+    origin: 'https://plataforma.e-fisco.app',
     processId: 101,
     routingId: 201
   });
@@ -163,6 +178,8 @@ function buildHarness() {
 
   const sandbox = {
     URL,
+    navigationPolicyModule,
+    ipcAuthorizationModule,
     Object,
     String,
     Number,
@@ -262,11 +279,13 @@ function buildHarness() {
     'const PRINTER_NAME ='
   );
 
-  const originBlock = sliceBetween(
-    MAIN_SOURCE,
-    'let offlineUiServer = null;',
-    'const MAIN_WINDOW_NAVIGATION_POLICY'
-  );
+  const originBlock =
+    'let offlineUiServer = null;\n' +
+    sliceBetween(
+      MAIN_SOURCE,
+      'const NAVIGATION_POLICY_CONTEXT =',
+      'const MAIN_WINDOW_NAVIGATION_POLICY'
+    );
 
   const ipcPolicyBlock = sliceBetween(
     MAIN_SOURCE,
@@ -289,7 +308,10 @@ function buildHarness() {
   const printBlock =
     ipcHandleBlock(
       'efisco:print-nfce-windows-driver',
-      'efisco:offline-product-find'
+      'registerOfflineReadHandlers({',
+      {
+        rawNextMarker: true
+      }
     );
 
   vm.runInContext(
@@ -345,7 +367,21 @@ test('fluxo online legítimo mantém origin confiável e impressão chega à fil
     h.api.isOnlineOriginAllowed(
       'https://jpiresoficial.wixstudio.com/e-fisco'
     ),
+    false
+  );
+
+  assert.equal(
+    h.api.isOnlineOriginAllowed(
+      'https://plataforma.e-fisco.app/'
+    ),
     true
+  );
+
+  assert.equal(
+    h.api.isOnlineOriginAllowed(
+      'https://plataforma.e-fisco.app.evil.example/'
+    ),
+    false
   );
 
   const handler =

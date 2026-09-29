@@ -18,7 +18,28 @@ const {
   normalizeFiscalNumberPolicy: policy,
   normalizeFiscalNumberIntent: normalizeIntent
 } = require('./offline-fiscal-values');
+const LOCAL_CONFIG_CONTEXT_PROPERTY =
+  '__efiscoLocalConfigRepository';
 const inFlightByIdentity = new Map();
+
+function localConfigRepository(db) {
+  const repository =
+    db &&
+    db[LOCAL_CONFIG_CONTEXT_PROPERTY];
+
+  if (
+    !repository ||
+    typeof repository.readRaw !== 'function' ||
+    typeof repository.write !== 'function' ||
+    typeof repository.delete !== 'function'
+  ) {
+    throw new Error(
+      'Repository local_config offline não está disponível.'
+    );
+  }
+
+  return repository;
+}
 
 function requiredText(value, fieldName) {
   const result = String(value == null ? '' : value).trim();
@@ -34,25 +55,29 @@ function nowIso(value) {
 }
 
 function readConfig(db, key) {
-  const row = db.prepare('SELECT value_json FROM local_config WHERE config_key = ?').get(key);
-  if (!row) return null;
-  try { return JSON.parse(String(row.value_json)); } catch (_) {
-    throw new Error('Intenção local de reserva fiscal está corrompida; revisão necessária.');
+  const raw =
+    localConfigRepository(db)
+      .readRaw(key);
+
+  if (raw == null) return null;
+
+  try {
+    return JSON.parse(String(raw));
+  } catch (_) {
+    throw new Error(
+      'Intenção local de reserva fiscal está corrompida; revisão necessária.'
+    );
   }
 }
 
 function writeConfig(db, key, value, updatedAt) {
-  db.prepare(`
-    INSERT INTO local_config (config_key, value_json, updated_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(config_key) DO UPDATE SET
-      value_json = excluded.value_json,
-      updated_at = excluded.updated_at
-  `).run(key, JSON.stringify(value), updatedAt);
+  localConfigRepository(db)
+    .write(key, value, updatedAt);
 }
 
 function deleteConfig(db, key) {
-  db.prepare('DELETE FROM local_config WHERE config_key = ?').run(key);
+  localConfigRepository(db)
+    .delete(key);
 }
 
 async function ensureInternal(options = {}) {

@@ -1,6 +1,6 @@
 {
   "name": "e-fisco-desktop",
-  "version": "1.0.41",
+  "version": "1.0.44",
   "description": "e-fisco Desktop - aplicação Electron para operação fiscal e comercial com continuidade offline e NFC-e.",
   "main": "main.js",
   "private": true,
@@ -15,6 +15,8 @@
     "test:electron-security": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/electron-navigation-security.test.js\" \"tests/unit/electron-webcontents-security.test.js\" \"tests/unit/electron-ipc-security.test.js\" \"tests/unit/electron-security-bypass.test.js\" \"tests/unit/electron-functional-regression.test.js\" \"tests/unit/electron-static-security-audit.test.js\" \"tests/unit/electron-security-suite-contract.test.js\"",
 
     "test:integration": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/**/*.test.js\"",
+    "test:scale": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/performance/**/*.test.js\"",
+    "test:resilience": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/resilience/**/*.test.js\"",
     "test:db": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/db-*.test.js\"",
     "test:fiscal": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/integration/fiscal-*.test.js\"",
     "test:architecture": "set ELECTRON_RUN_AS_NODE=1&& electron --test \"tests/unit/architecture-*.test.js\" \"tests/integration/architecture-*.test.js\"",
@@ -36,8 +38,20 @@
       "icone_app.ico",
       "print-driver-nfce.ps1",
       "EFISCO-UPDATER.exe",
+      "desktop/**",
+      "updater/**",
+      "offline/auth-session/**",
+      "offline/continuity/**",
+      "offline/diagnostics/**",
+      "offline/failover/**",
+      "offline/runtime/**",
+      "offline/sync/**",
+      "offline/telemetry/**",
+      "offline/fiscal/**",
+      "printing/**",
       "offline-standby.js",
       "offline-db.js",
+      "offline-db/**",
       "offline-outbox-worker.js",
       "offline-sync-http-transport.js",
       "offline-device-auth.js",
@@ -50,7 +64,8 @@
       "offline-fiscal-*.js",
       "offline-ui-server.js",
       "offline-ui/**",
-      "phase2-pair-device.js"
+      "phase2-pair-device.js",
+      "!**/*.bak*"
     ],
     "directories": {
       "output": "dist"

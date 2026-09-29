@@ -5,6 +5,10 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const navigationPolicyModule =
+  require('../../desktop/security/navigation-policy');
+const ipcAuthorizationModule =
+  require('../../desktop/security/ipc-authorization');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const MAIN_SOURCE = fs.readFileSync(
@@ -13,6 +17,15 @@ const MAIN_SOURCE = fs.readFileSync(
 );
 const PRELOAD_SOURCE = fs.readFileSync(
   path.join(ROOT, 'preload.js'),
+  'utf8'
+);
+const OFFLINE_READ_HANDLERS_SOURCE = fs.readFileSync(
+  path.join(
+    ROOT,
+    'desktop',
+    'ipc',
+    'offline-handlers.js'
+  ),
   'utf8'
 );
 
@@ -62,8 +75,8 @@ function makeFrame({
 
 function buildHarness() {
   const mainFrame = makeFrame({
-    url: 'https://jpiresoficial.wixstudio.com/e-fisco',
-    origin: 'https://jpiresoficial.wixstudio.com',
+    url: 'https://plataforma.e-fisco.app/',
+    origin: 'https://plataforma.e-fisco.app',
     processId: 101,
     routingId: 201
   });
@@ -93,6 +106,8 @@ function buildHarness() {
 
   const sandbox = {
     URL,
+    navigationPolicyModule,
+    ipcAuthorizationModule,
     Object,
     String,
     Number,
@@ -116,9 +131,10 @@ function buildHarness() {
       'const PRINTER_NAME ='
     ) +
       '\n' +
+      'let offlineUiServer = null;\n' +
       sliceBetween(
         MAIN_SOURCE,
-        'let offlineUiServer = null;',
+        'const NAVIGATION_POLICY_CONTEXT =',
         'const MAIN_WINDOW_NAVIGATION_POLICY'
       ) +
       '\n' +
@@ -172,25 +188,31 @@ function buildHarness() {
 
 function collectRegisteredChannels() {
   const map = new Map();
-  let match;
 
-  const direct =
-    /ipcMain\.(handle|on)\s*\(\s*['"]([^'"]+)['"]/g;
+  for (const source of [
+    MAIN_SOURCE,
+    OFFLINE_READ_HANDLERS_SOURCE
+  ]) {
+    let match;
 
-  while ((match = direct.exec(MAIN_SOURCE)) !== null) {
-    map.set(
-      match[2],
-      match[1] === 'on'
-        ? 'send'
-        : 'invoke'
-    );
-  }
+    const direct =
+      /ipcMain\.(handle|on)\s*\(\s*['"]([^'"]+)['"]/g;
 
-  const wrapped =
-    /instalarOfflineHandler\s*\(\s*['"]([^'"]+)['"]/g;
+    while ((match = direct.exec(source)) !== null) {
+      map.set(
+        match[2],
+        match[1] === 'on'
+          ? 'send'
+          : 'invoke'
+      );
+    }
 
-  while ((match = wrapped.exec(MAIN_SOURCE)) !== null) {
-    map.set(match[1], 'invoke');
+    const wrapped =
+      /(?:instalarOfflineHandler|registerOfflineReadHandler|registerOfflineMutationHandler)\s*\(\s*['"]([^'"]+)['"]/g;
+
+    while ((match = wrapped.exec(source)) !== null) {
+      map.set(match[1], 'invoke');
+    }
   }
 
   return map;
@@ -213,13 +235,13 @@ function collectPreloadChannels() {
   return map;
 }
 
-test('política IPC cobre exatamente os 22 canais registrados e expostos', () => {
+test('política IPC cobre exatamente os 25 canais registrados e expostos', () => {
   const { api } = buildHarness();
   const policyChannels = Object.keys(api.policy).sort();
   const registered = collectRegisteredChannels();
   const preload = collectPreloadChannels();
 
-  assert.equal(policyChannels.length, 22);
+  assert.equal(policyChannels.length, 25);
   assert.deepEqual(
     policyChannels,
     [...registered.keys()].sort()
@@ -243,7 +265,7 @@ test('política IPC cobre exatamente os 22 canais registrados e expostos', () =>
   }
 });
 
-test('matriz mantém 4 canais online e 18 canais offline sem escopo compartilhado', () => {
+test('matriz mantém 4 canais online e 21 canais offline sem escopo compartilhado', () => {
   const { api } = buildHarness();
 
   const entries = Object.values(api.policy);
@@ -263,7 +285,7 @@ test('matriz mantém 4 canais online e 18 canais offline sem escopo compartilhad
         entry.senderScope ===
         api.scopes.OFFLINE_VIEW_TOP
     ).length,
-    18
+    21
   );
 
   for (const entry of entries) {
@@ -291,7 +313,7 @@ test('matriz mantém 4 canais online e 18 canais offline sem escopo compartilhad
   }
 });
 
-test('os 22 canais aceitam apenas superfície e transporte declarados', () => {
+test('os 25 canais aceitam apenas superfície e transporte declarados', () => {
   const {
     api,
     mainEvent,
@@ -459,8 +481,8 @@ test('subframes same-origin não herdam capacidades IPC privilegiadas', () => {
   } = buildHarness();
 
   const mainChild = makeFrame({
-    url: 'https://jpiresoficial.wixstudio.com/frame',
-    origin: 'https://jpiresoficial.wixstudio.com',
+    url: 'https://plataforma.e-fisco.app/frame',
+    origin: 'https://plataforma.e-fisco.app',
     processId: 101,
     routingId: 301
   });
@@ -559,7 +581,7 @@ test('navegação para outro documento revoga IPC da mainWindow imediatamente', 
 
   for (const [url, origin] of [
     ['https://evil.example/', 'https://evil.example'],
-    ['about:blank', 'https://jpiresoficial.wixstudio.com'],
+    ['about:blank', 'https://plataforma.e-fisco.app'],
     ['data:text/html,update', 'null']
   ]) {
     mainFrame.url = url;
@@ -624,7 +646,7 @@ test('offlineView perde IPC ao sair do origin runtime ou quando a porta muda', (
   );
 });
 
-test('instalarIpc usa somente autorização específica por canal', () => {
+test('handlers IPC usam somente autorização específica por canal', () => {
   const start = MAIN_SOURCE.indexOf(
     'function instalarIpc()'
   );
@@ -635,20 +657,25 @@ test('instalarIpc usa somente autorização específica por canal', () => {
     start + 1
   );
 
-  const block =
+  const mainBlock =
     end > start
       ? MAIN_SOURCE.slice(start, end)
       : MAIN_SOURCE.slice(start);
 
+  const handlerSources =
+    mainBlock +
+    '\n' +
+    OFFLINE_READ_HANDLERS_SOURCE;
+
   assert.equal(
-    block.includes(
+    handlerSources.includes(
       'isAuthorizedAppSender(event)'
     ),
     false
   );
 
   assert.equal(
-    block.includes(
+    handlerSources.includes(
       'isOfflineViewSender(event)'
     ),
     false
@@ -656,15 +683,260 @@ test('instalarIpc usa somente autorização específica por canal', () => {
 
   assert.equal(
     (
-      block.match(
+      handlerSources.match(
         /!isIpcChannelAuthorized\s*\(/g
       ) || []
     ).length,
-    14
+    19
   );
 
   assert.match(
-    block,
+    mainBlock,
     /isIpcChannelAuthorized\(\s*event,\s*channel,\s*['"]invoke['"]/
+  );
+
+  assert.match(
+    OFFLINE_READ_HANDLERS_SOURCE,
+    /isIpcChannelAuthorized\(\s*event,\s*channel,\s*['"]invoke['"]/
+  );
+});
+
+
+test('matriz de transporte permanece exatamente 23 invoke e 2 send', () => {
+  const { api } = buildHarness();
+
+  const invokeChannels =
+    Object.entries(api.policy)
+      .filter(([, policy]) => policy.transport === 'invoke')
+      .map(([channel]) => channel)
+      .sort();
+
+  const sendChannels =
+    Object.entries(api.policy)
+      .filter(([, policy]) => policy.transport === 'send')
+      .map(([channel]) => channel)
+      .sort();
+
+  assert.equal(invokeChannels.length, 23);
+  assert.equal(sendChannels.length, 2);
+
+  assert.deepEqual(
+    sendChannels,
+    [
+      'efisco:offline-operator-bridge-probe',
+      'efisco:offline-operator-verifier-candidate'
+    ]
+  );
+});
+
+test('capabilities IPC permanecem explícitas e com cardinalidade congelada', () => {
+  const { api } = buildHarness();
+
+  const counts =
+    Object.values(api.policy)
+      .reduce(
+        (acc, policy) => {
+          assert.equal(
+            typeof policy.capability,
+            'string'
+          );
+          assert.notEqual(
+            policy.capability.trim(),
+            ''
+          );
+
+          acc[policy.capability] =
+            (acc[policy.capability] || 0) + 1;
+
+          return acc;
+        },
+        {}
+      );
+
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(counts)),
+    {
+      OFFLINE_CREDENTIAL_BRIDGE: 2,
+      OFFLINE_CREDENTIAL_PROVISION: 1,
+      PRINT: 1,
+      OFFLINE_DIAGNOSTIC: 2,
+      OFFLINE_REPAIR: 1,
+      OFFLINE_LOGIN: 1,
+      OFFLINE_READ: 8,
+      OFFLINE_MUTATION: 6,
+      FISCAL_SENSITIVE: 2,
+      DEVICE_IDENTITY_SENSITIVE: 1
+    }
+  );
+});
+
+test('cada canal IPC congelado possui um único owner de registro no processo main', () => {
+  const counts = new Map();
+
+  const add = (channel) => {
+    counts.set(
+      channel,
+      (counts.get(channel) || 0) + 1
+    );
+  };
+
+  for (const source of [
+    MAIN_SOURCE,
+    OFFLINE_READ_HANDLERS_SOURCE
+  ]) {
+    let match;
+
+    const direct =
+      /ipcMain\.(?:handle|on)\s*\(\s*['"]([^'"]+)['"]/g;
+
+    while ((match = direct.exec(source)) !== null) {
+      add(match[1]);
+    }
+
+    const wrapped =
+      /(?:instalarOfflineHandler|registerOfflineReadHandler|registerOfflineMutationHandler)\s*\(\s*['"]([^'"]+)['"]/g;
+
+    while ((match = wrapped.exec(source)) !== null) {
+      add(match[1]);
+    }
+  }
+
+  const { api } = buildHarness();
+  const frozenChannels =
+    Object.keys(api.policy).sort();
+
+  assert.deepEqual(
+    [...counts.keys()].sort(),
+    frozenChannels
+  );
+
+  for (const channel of frozenChannels) {
+    assert.equal(
+      counts.get(channel),
+      1,
+      'owner IPC duplicado: ' + channel
+    );
+  }
+});
+
+test('política IPC é imutável no container e nas entradas por canal', () => {
+  const { api } = buildHarness();
+
+  assert.equal(
+    Object.isFrozen(api.policy),
+    true
+  );
+
+  for (const policy of Object.values(api.policy)) {
+    assert.equal(
+      Object.isFrozen(policy),
+      true
+    );
+  }
+});
+
+
+test('nomes dos 25 canais permanecem iguais ao contrato congelado', () => {
+  const { api } = buildHarness();
+
+  const frozen = [
+    'efisco:nfce-number-peek',
+    'efisco:offline-auto-repair',
+    'efisco:offline-diagnostic-report',
+    'efisco:offline-cash-close',
+    'efisco:offline-cash-consult',
+    'efisco:offline-cash-movement',
+    'efisco:offline-cash-open',
+    'efisco:offline-company-header',
+    'efisco:offline-credential-provision',
+    'efisco:offline-crediario-detail',
+    'efisco:offline-crediario-items-update',
+    'efisco:offline-crediario-open',
+    'efisco:offline-crediarios-list',
+    'efisco:offline-customers-list',
+    'efisco:offline-finance-snapshot',
+    'efisco:offline-nfce-contingency-danfe-preview',
+    'efisco:offline-operator-bridge-probe',
+    'efisco:offline-operator-login',
+    'efisco:offline-operator-verifier-candidate',
+    'efisco:offline-product-find',
+    'efisco:offline-products-list',
+    'efisco:offline-sale-paid',
+    'efisco:offline-self-test',
+    'efisco:print-nfce-windows-driver',
+    'efisco:superadmin-a1-mirror'
+  ].sort();
+
+  assert.deepEqual(
+    Object.keys(api.policy).sort(),
+    frozen
+  );
+});
+
+
+test('redirect oficial para plataforma mantém IPC online exato sem aceitar lookalike', () => {
+  const {
+    api,
+    mainFrame,
+    mainEvent
+  } = buildHarness();
+
+  mainFrame.url =
+    'https://plataforma.e-fisco.app/';
+  mainFrame.origin =
+    'https://plataforma.e-fisco.app';
+
+  const sender =
+    api.resolveAuthorizedIpcSender(
+      mainEvent
+    );
+
+  assert.ok(sender);
+  assert.equal(
+    sender.surface,
+    api.scopes.MAIN_WINDOW_TOP
+  );
+  assert.equal(
+    sender.frameOrigin,
+    'https://plataforma.e-fisco.app'
+  );
+
+  assert.equal(
+    api.isIpcChannelAuthorized(
+      mainEvent,
+      'efisco:offline-credential-provision',
+      'invoke'
+    ),
+    true
+  );
+
+  assert.equal(
+    api.isIpcChannelAuthorized(
+      mainEvent,
+      'efisco:print-nfce-windows-driver',
+      'invoke'
+    ),
+    true
+  );
+
+  mainFrame.url =
+    'https://plataforma.e-fisco.app.evil.example/';
+  mainFrame.origin =
+    'https://plataforma.e-fisco.app.evil.example';
+
+  assert.equal(
+    api.resolveAuthorizedIpcSender(
+      mainEvent
+    ),
+    null
+  );
+
+  assert.equal(
+    api.isIpcChannelAuthorized(
+      mainEvent,
+      'efisco:offline-credential-provision',
+      'invoke'
+    ),
+    false
   );
 });

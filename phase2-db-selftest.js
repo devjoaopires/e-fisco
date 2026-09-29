@@ -17,6 +17,7 @@ const {
   enqueueOutboxOperation,
   getOutboxOperation,
   listOutboxReady,
+  upsertProductCache,
   registerOfflineSaleAtomic,
   getSaleById
 } = require('./offline-db');
@@ -175,6 +176,19 @@ async function runPhase2DbSelfTest() {
         ),
         true
       );
+
+      upsertProductCache({
+        empresaId,
+        produtoId: 'product-selftest',
+        codigo: 'P-SELFTEST',
+        descricao: 'Produto do self-test',
+        unidade: 'UN',
+        precoCentavos: 1000,
+        ativo: true,
+        payload: {
+          quantidadeEstoque: 10
+        }
+      });
 
       const saleId = 'sale-rollback-selftest';
       const saleOperationId = 'op-sale-rollback-selftest';

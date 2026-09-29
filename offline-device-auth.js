@@ -10,11 +10,27 @@ const TOKEN_DIR_NAME = 'offline-auth';
 const TOKEN_FILE_NAME = 'sync-device-token.bin';
 const TOKEN_MIN_LENGTH = 32;
 const TOKEN_MAX_LENGTH = 512;
+const LOCAL_CONFIG_CONTEXT_PROPERTY =
+  '__efiscoLocalConfigRepository';
 
 function requiredDatabase(db) {
   if (!db || typeof db.prepare !== 'function') {
     throw new Error('SQLite offline válido é obrigatório para identidade do device.');
   }
+
+  const repository =
+    db[LOCAL_CONFIG_CONTEXT_PROPERTY];
+
+  if (
+    !repository ||
+    typeof repository.read !== 'function' ||
+    typeof repository.write !== 'function'
+  ) {
+    throw new Error(
+      'SQLite offline válido é obrigatório para identidade do device.'
+    );
+  }
+
   return db;
 }
 
@@ -26,26 +42,25 @@ function normalizeDeviceId(value) {
   return text;
 }
 
-function readLocalConfig(db, key) {
-  const row = requiredDatabase(db)
-    .prepare('SELECT value_json FROM local_config WHERE config_key = ?')
-    .get(String(key));
-  if (!row) return null;
-  try {
-    return JSON.parse(String(row.value_json));
-  } catch (_) {
-    return null;
-  }
+function localConfigRepository(db) {
+  return requiredDatabase(db)[
+    LOCAL_CONFIG_CONTEXT_PROPERTY
+  ];
 }
 
-function writeLocalConfig(db, key, value, updatedAt = new Date().toISOString()) {
-  requiredDatabase(db).prepare(`
-    INSERT INTO local_config (config_key, value_json, updated_at)
-    VALUES (?, ?, ?)
-    ON CONFLICT(config_key) DO UPDATE SET
-      value_json = excluded.value_json,
-      updated_at = excluded.updated_at
-  `).run(String(key), JSON.stringify(value), String(updatedAt));
+function readLocalConfig(db, key) {
+  return localConfigRepository(db)
+    .read(key);
+}
+
+function writeLocalConfig(
+  db,
+  key,
+  value,
+  updatedAt = new Date().toISOString()
+) {
+  localConfigRepository(db)
+    .write(key, value, updatedAt);
 }
 
 function getOrCreateSyncDeviceId(input = {}) {

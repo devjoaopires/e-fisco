@@ -1,0 +1,92 @@
+{
+  "stage": "5.5/5",
+  "capturedAt": "2026-09-28",
+  "releaseVersion": "1.0.42",
+  "engineeringPlanStatus": "COMPLETE",
+  "publicReleaseStatus": "BLOCKED_BY_CODE_SIGNING",
+  "desktopEndToEnd": {
+    "tests": 1,
+    "passed": 1,
+    "failed": 0,
+    "version": "1.0.42",
+    "onlineProvisioningToOfflineCredential": true,
+    "offlineLoginValidated": true,
+    "wrongPasswordRejected": true,
+    "telemetryQueuedDuringOutage": true,
+    "queueSurvivedReload": true,
+    "telemetryFlushedAfterRecovery": true,
+    "remainingPending": 0,
+    "rawPasswordAbsentFromQueue": true
+  },
+  "serverEndToEnd": {
+    "publicHttpsTelemetryStatus": 200,
+    "firstEventAccepted": true,
+    "duplicateRecognized": true,
+    "storedUniqueRows": 1,
+    "unauthenticatedSupportRejected": true,
+    "overviewVisible": true,
+    "deviceVisible": true,
+    "alertSeverity": "ATTENTION",
+    "timelineVisible": true,
+    "diagnosticCode": "OFFLINE-SERVER-002",
+    "temporaryDevicesRemaining": 0,
+    "temporaryEventsRemaining": 0
+  },
+  "serverFinalRegression": {
+    "security": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "telemetry": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "resilience": {
+      "tests": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "healthOk": true,
+    "pm2Status": "online",
+    "pm2Pid": 398787,
+    "pm2RestartCount": 86
+  },
+  "releaseCandidate": {
+    "installer": "dist/e-fisco-Setup-1.0.42.exe",
+    "installerBytes": 107188111,
+    "installerSha256": "4D4938B7B12C804561E6815C32FEED945DEE8F28EBEB2D4043EB8E206782CBB0",
+    "installerSha512": "utPJllqHIoKTCCOAAni/i2S5/veE1QNou055Ruhu3lm1jELBhuY+oTQPcV/iAqFpztFfezM/ojZFW2GwLLRxwA==",
+    "releaseValidator": "OK",
+    "cleanInstallValidated": true,
+    "upgradeFrom1041Validated": true,
+    "asarClean": true,
+    "rollbackArtifactPreserved": true
+  },
+  "codeSigningGate": {
+    "requiredByProjectPolicy": true,
+    "certificateStatus": "PENDING",
+    "certificateFound": false,
+    "reason": "certificate-not-issued-or-not-loaded",
+    "installerSignature": "NotSigned",
+    "publicDistributionApproved": false,
+    "requiredNextAction": "Obter/carregar certificado de Code Signing e SignTool, reconstruir/assinar a release e repetir validação de assinatura e hashes."
+  },
+  "stage5": {
+    "step5_1_scale": "COMPLETE",
+    "step5_2_resilience": "COMPLETE",
+    "step5_3_security": "COMPLETE",
+    "step5_4_buildRelease": "COMPLETE_QA_UNSIGNED",
+    "step5_5_endToEndClosure": "COMPLETE"
+  },
+  "fullPlan": {
+    "stage1": "COMPLETE",
+    "stage2": "COMPLETE",
+    "stage3": "COMPLETE",
+    "stage4": "COMPLETE",
+    "stage5": "COMPLETE",
+    "engineeringPlanComplete": true,
+    "publicReleaseBlockedOnlyByCodeSigning": true
+  }
+}

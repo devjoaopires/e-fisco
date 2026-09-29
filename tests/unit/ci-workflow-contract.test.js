@@ -311,3 +311,175 @@ test('GitHub gera artefato de CI e R2 continua sendo o canal de distribuiÃ§Ã�
   }
 });
 
+
+
+test('inventario de code signing cobre todos os binarios distribuídos e integra a validacao de release', () => {
+  const policy = readJson('ci/code-signing-policy.json');
+  const inventoryValidator = readText('ci/validate-code-signing-inventory.ps1');
+  const releaseValidator = readText('ci/validate-release.ps1');
+
+  assert.equal(policy.schemaVersion, 1);
+  assert.deepEqual(
+    policy.requiredSignedBinaries.map((item) => item.id),
+    ['installer', 'application', 'updater-source', 'updater-packaged']
+  );
+  assert.equal(policy.thirdPartyBinaries.length, 9);
+  assert.equal(policy.policy.rejectMissingRequiredBinary, true);
+  assert.equal(policy.policy.rejectUnsignedRequiredBinary, true);
+  assert.equal(policy.policy.rejectInvalidRequiredSignature, true);
+
+  assert.match(inventoryValidator, /Binarios distribuidos sem classificacao/);
+  assert.match(inventoryValidator, /Binarios declarados na policy ausentes do dist/);
+  assert.match(inventoryValidator, /sameContentAs/);
+  assert.match(inventoryValidator, /CODE_SIGNING_INVENTORY=OK/);
+  assert.match(releaseValidator, /validate-code-signing-inventory\.ps1/);
+});
+
+
+test('modelo de code signing usa servico remoto com HSM e nao depende de PFX na CI', () => {
+  const model = readJson('ci/code-signing-model.json');
+  const policy = readJson('ci/code-signing-policy.json');
+
+  assert.equal(model.schemaVersion, 1);
+  assert.equal(model.status, 'selected');
+  assert.equal(model.decision, 'managed-remote-signing-service-hsm-backed');
+  assert.equal(model.privateKeyModel.exportable, false);
+  assert.equal(model.privateKeyModel.storedInRepository, false);
+  assert.equal(model.privateKeyModel.storedAsGitHubSecretPfx, false);
+  assert.equal(model.ciIntegration.localPrivateKeyRequired, false);
+  assert.equal(model.timestamping.required, true);
+  assert.equal(model.timestamping.digest, 'SHA256');
+  assert.equal(model.artifacts.policyFile, 'ci/code-signing-policy.json');
+  assert.deepEqual(
+    model.artifacts.requiredOwnBinaries,
+    policy.requiredSignedBinaries.map((item) => item.id)
+  );
+  assert.equal(model.providerSelection.provider, 'SSL.com');
+  assert.equal(model.providerSelection.service, 'eSigner for Code');
+  assert.equal(model.providerSelection.certificateProfile, 'OV Code Signing');
+  assert.equal(model.providerSelection.trustModel, 'public-trust');
+  assert.equal(model.providerSelection.certificateStatus, 'selected-not-yet-issued');
+  assert.equal(model.providerSelection.account, null);
+  assert.equal(model.providerSelection.credentialId, null);
+  assert.equal(model.providerSelection.selectionStep, '2.2/6');
+  assert.equal(model.providerSelection.nextStep, '2.3/6');
+});
+
+
+test('validador de certificado exige EKU, identidade, cadeia confiavel e provider esperado', () => {
+  const model = readJson('ci/code-signing-model.json');
+  const validator = readText('ci/validate-code-signing-certificate.ps1');
+
+  assert.equal(model.certificateValidation.status, 'pending-certificate-issuance');
+  assert.equal(model.certificateValidation.requiredEkuOid, '1.3.6.1.5.5.7.3.3');
+  assert.equal(model.certificateValidation.requireCurrentlyValid, true);
+  assert.equal(model.certificateValidation.requireTrustedChain, true);
+  assert.equal(model.certificateValidation.requirePrivateKeyBinding, true);
+  assert.equal(model.certificateValidation.expectedProvider, 'SSL.com');
+  assert.equal(model.certificateValidation.expectedOrganizationName, null);
+  assert.equal(model.certificateValidation.validator, 'ci/validate-code-signing-certificate.ps1');
+
+  assert.match(validator, /EnhancedKeyUsageList/);
+  assert.match(validator, /HasPrivateKey/);
+  assert.match(validator, /X509Chain/);
+  assert.match(validator, /RevocationMode/);
+  assert.match(validator, /subject organizationName/);
+  assert.match(validator, /provider esperado/);
+  assert.match(validator, /CODE_SIGNING_CERTIFICATE_VALIDATION=OK/);
+});
+
+
+test('fronteira de secrets de code signing protege HSM, environment e arquivos sensiveis', () => {
+  const model = readJson('ci/code-signing-model.json');
+  const secretsPolicy = readJson('ci/code-signing-secrets-policy.json');
+  const validator = readText('ci/validate-code-signing-secret-boundary.ps1');
+  const releaseValidator = readText('ci/validate-release.ps1');
+
+  assert.equal(model.ciIntegration.authentication, 'github-environment-secrets-for-esigner-cka');
+  assert.equal(model.ciIntegration.environment, 'code-signing-production');
+  assert.equal(model.ciIntegration.localPrivateKeyRequired, false);
+  assert.equal(model.ciIntegration.oidcForSelectedProviderFlow, false);
+
+  assert.equal(secretsPolicy.privateKey.custody, 'SSL.com cloud HSM');
+  assert.equal(secretsPolicy.privateKey.presentOnGitHubRunner, false);
+  assert.equal(secretsPolicy.privateKey.pfxAllowed, false);
+  assert.equal(secretsPolicy.githubActions.pullRequestsMayAccessSigningCredentials, false);
+  assert.equal(secretsPolicy.githubActions.forksMayAccessSigningCredentials, false);
+  assert.deepEqual(
+    secretsPolicy.environmentSecrets.map((item) => item.name),
+    ['SSL_COM_USERNAME', 'SSL_COM_PASSWORD', 'SSL_COM_TOTP_SECRET', 'SSL_COM_CREDENTIAL_ID']
+  );
+  assert.equal(secretsPolicy.runnerEphemeralMaterial.ckaMasterKey.uploadAsArtifact, false);
+  assert.equal(secretsPolicy.runnerEphemeralMaterial.ckaMasterKey.cleanupRequired, true);
+
+  assert.match(validator, /git -C .* ls-files/);
+  assert.match(validator, /BEGIN PRIVATE KEY/);
+  assert.match(validator, /CODE_SIGNING_SECRET_BOUNDARY=OK/);
+  assert.match(releaseValidator, /validate-code-signing-secret-boundary\.ps1/);
+});
+
+
+test('assinatura Windows exige SHA256, RFC3161 e timestamp SSL.com', () => {
+  const model = readJson('ci/code-signing-model.json');
+  const signer = readText('ci/sign-windows-binary.ps1');
+  const signingTest = readText('ci/test-code-signing.ps1');
+
+  assert.equal(model.timestamping.required, true);
+  assert.equal(model.timestamping.protocol, 'RFC3161');
+  assert.equal(model.timestamping.digest, 'SHA256');
+  assert.equal(model.timestamping.providerEndpoint, 'http://ts.ssl.com');
+  assert.equal(model.timestamping.allowLegacyFallbackAutomatically, false);
+
+  assert.equal(model.signingConfiguration.tool, 'Microsoft SignTool');
+  assert.equal(model.signingConfiguration.fileDigest, 'SHA256');
+  assert.equal(model.signingConfiguration.signingScript, 'ci/sign-windows-binary.ps1');
+  assert.equal(model.signingConfiguration.testScript, 'ci/test-code-signing.ps1');
+
+  assert.match(signer, /sign \/fd sha256 \/tr \$TimestampUrl \/td sha256 \/sha1/);
+  assert.match(signer, /verify \/pa \/all/);
+  assert.match(signer, /TimeStamperCertificate/);
+  assert.match(signer, /CODE_SIGNING_SIGNATURE_VALIDATION=OK/);
+
+  assert.match(signingTest, /Copy-Item/);
+  assert.match(signingTest, /Get-FileHash/);
+  assert.match(signingTest, /CODE_SIGNING_TEST_RESULT=SIGNED_AND_VERIFIED/);
+  assert.match(signingTest, /CODE_SIGNING_TEST_CLEANUP=OK/);
+});
+
+
+test('preflight de code signing e manual, protegido por environment e nao imprime secrets', () => {
+  const model = readJson('ci/code-signing-model.json');
+  const secretsPolicy = readJson('ci/code-signing-secrets-policy.json');
+  const workflow = readText('.github/workflows/code-signing-preflight.yml');
+  const validator = readText('ci/validate-code-signing-ci-secrets.ps1');
+
+  assert.equal(model.ciCredentialProvisioning.step, '2.6/6');
+  assert.equal(model.ciCredentialProvisioning.environment, 'code-signing-production');
+  assert.equal(model.ciCredentialProvisioning.repositoryContainsSecretValues, false);
+  assert.equal(model.ciCredentialProvisioning.realCredentialsLoaded, false);
+  assert.deepEqual(
+    model.ciCredentialProvisioning.requiredSecrets,
+    ['SSL_COM_USERNAME', 'SSL_COM_PASSWORD', 'SSL_COM_TOTP_SECRET']
+  );
+
+  const credentialPolicy = secretsPolicy.environmentSecrets.find(
+    (item) => item.name === 'SSL_COM_CREDENTIAL_ID'
+  );
+  assert.equal(credentialPolicy.required, false);
+  assert.equal(credentialPolicy.availableAfterCertificateIssuance, true);
+
+  assert.match(workflow, /workflow_dispatch:/);
+  assert.doesNotMatch(workflow, /\n\s+push:/);
+  assert.doesNotMatch(workflow, /\n\s+pull_request:/);
+  assert.match(workflow, /environment: code-signing-production/);
+  assert.match(workflow, /secrets\.SSL_COM_USERNAME/);
+  assert.match(workflow, /secrets\.SSL_COM_PASSWORD/);
+  assert.match(workflow, /secrets\.SSL_COM_TOTP_SECRET/);
+  assert.match(workflow, /persist-credentials: false/);
+  assert.doesNotMatch(workflow, /echo\s+.*SSL_COM_PASSWORD/i);
+  assert.doesNotMatch(workflow, /echo\s+.*SSL_COM_TOTP_SECRET/i);
+
+  assert.match(validator, /CODE_SIGNING_CI_SECRETS_STATUS=READY/);
+  assert.match(validator, /CODE_SIGNING_CI_SECRETS_STATUS=PENDING/);
+  assert.doesNotMatch(validator, /Write-Output\s+.*\$value/);
+});

@@ -1,0 +1,105 @@
+{
+  "stage": "5.2/5",
+  "capturedAt": "2026-09-28",
+  "scope": "failure-and-recovery",
+  "productionOutageUsed": false,
+  "desktop": {
+    "resilienceTests": {
+      "total": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "scenarios": {
+      "doubleRenameFailure": {
+        "initiallyReproducedDataLoss": true,
+        "beforeFixRecoveredItems": 0,
+        "expectedRecoveredItems": 1,
+        "fixed": true,
+        "strategy": "previous durable file + rollback restore"
+      },
+      "apiTimeout": {
+        "queuePreserved": true,
+        "backoffHonored": true,
+        "drainedAfterRecovery": true
+      },
+      "longOffline": {
+        "daysTested": 20,
+        "queueSurvived": true,
+        "sentAfterRecovery": true
+      },
+      "retention": {
+        "configuredDays": 30,
+        "day29Preserved": true,
+        "day31Expired": true
+      },
+      "diskFullBeforeRename": {
+        "previousDurableStatePreserved": true
+      },
+      "processInterruptedBetweenRenames": {
+        "previousFileRecoveredAtStartup": true
+      },
+      "corruptQueue": {
+        "quarantined": true,
+        "newEventsAcceptedAfterRecovery": true
+      },
+      "windowsRenameFallback": {
+        "firstRenameFailsSecondSucceeds": true,
+        "bothEventsDurableAfterRestart": true
+      }
+    },
+    "scaleRegressionAfterFix": {
+      "tests": 3,
+      "passed": 3,
+      "queue100EnqueueMs": 336,
+      "queue100ReloadMs": 14,
+      "queue100DrainMs": 6,
+      "coalesce1000Ms": 1892,
+      "concurrent20FlushesMs": 36,
+      "networkBatches": 4
+    },
+    "broadRegression": {
+      "tests": 156,
+      "passed": 156,
+      "failed": 0
+    }
+  },
+  "server": {
+    "normalTelemetryTests": {
+      "total": 14,
+      "passed": 14
+    },
+    "resilienceTests": {
+      "total": 2,
+      "passed": 2
+    },
+    "scenarios": {
+      "postgresConnectionRefused": {
+        "noAckGenerated": true,
+        "nextAttemptRecovered": true
+      },
+      "postgresFailureDuringInsert": {
+        "rollbackExecuted": true,
+        "clientReleased": true,
+        "nextTransactionRecovered": true
+      }
+    },
+    "runtime": {
+      "apiStatus": "online",
+      "pm2Pid": 397549,
+      "pm2RestartCount": 84,
+      "healthOk": true,
+      "loadTestDevicesRemaining": 0,
+      "loadTestEventsRemaining": 0
+    }
+  },
+  "acceptance": {
+    "durableQueueSurvivesInjectedWriteFailures": true,
+    "networkRecoveryPreservesTelemetry": true,
+    "longOfflineRecoveryWorks": true,
+    "corruptionRecoveryWorks": true,
+    "databaseRecoveryWorks": true,
+    "noProductionOutageRequired": true,
+    "noTemporaryDataRemaining": true,
+    "broadRegressionGreen": true
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "stage": "5.3/5",
+  "capturedAt": "2026-09-28",
+  "scope": "final-security-hardening",
+  "desktop": {
+    "electronSecuritySubset": {
+      "tests": 83,
+      "passed": 83,
+      "failed": 0
+    },
+    "broadRegression": {
+      "tests": 156,
+      "passed": 156,
+      "failed": 0
+    },
+    "checks": {
+      "nodeIntegrationTrueAbsent": true,
+      "contextIsolationFalseAbsent": true,
+      "webSecurityFalseAbsent": true,
+      "dynamicEvalAbsent": true,
+      "externalPopupPolicyClosed": true,
+      "ipcPolicyExact": true,
+      "ipcChannels": 25,
+      "onlineChannels": 4,
+      "offlineChannels": 21
+    }
+  },
+  "server": {
+    "securityTests": {
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "telemetryTests": {
+      "tests": 14,
+      "passed": 14,
+      "failed": 0
+    },
+    "resilienceTests": {
+      "tests": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "npmAuditProduction": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "findingsFixed": {
+      "unauthenticatedTemporarySupportRouteRemoved": true,
+      "adminApiKeyMissingFailsClosed": true,
+      "adminApiKeyConstantTimeComparison": true,
+      "telemetryParserLimitBytes": 1048576,
+      "invalidJsonGenericResponse": true,
+      "unknownCorsOriginGetsNoAllowOrigin": true,
+      "envMode": "600",
+      "nginxServerTokensOff": true,
+      "nginxTelemetryBodyLimit": "1m",
+      "nginxDuplicateVhostBackupsRemovedFromSitesEnabled": true
+    },
+    "tls": {
+      "minimum": "TLSv1.2",
+      "maximum": "TLSv1.3",
+      "hstsPresent": true
+    },
+    "publicSmoke": {
+      "health200": true,
+      "adminRejectsMissingKey": true,
+      "adminAcceptsConfiguredKey": true,
+      "removedSupportRoute404WithAdminKey": true,
+      "malformedJsonRejected": true,
+      "oversizedTelemetryRejected": true,
+      "unknownOriginGetsNoCorsHeader": true,
+      "allowedOriginGetsExactCorsHeader": true,
+      "serverVersionHidden": true,
+      "xPoweredByAbsent": true
+    },
+    "temporarySupportRowsRemaining": 0,
+    "runtime": {
+      "apiStatus": "online",
+      "pm2RestartCountAfterControlledRestart": 86,
+      "nginxConflictingServerNameWarnings": 0
+    }
+  },
+  "acceptance": {
+    "criticalTemporaryRouteRemoved": true,
+    "adminAuthFailsClosed": true,
+    "secretsFilePermissionsHardened": true,
+    "edgeBodyLimitEnforced": true,
+    "corsExactOriginEnforced": true,
+    "knownProductionDependencyVulnerabilities": 0,
+    "desktopRegressionGreen": true,
+    "serverSecurityRegressionGreen": true
+  }
+}

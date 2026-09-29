@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { DatabaseSync } = require('node:sqlite');
 
 const {
   OFFLINE_DB_SCHEMA_VERSION,
@@ -44,6 +45,7 @@ test('primeira abertura cria o SQLite no caminho temporário esperado', async ()
       assert.equal(info.schemaVersion, OFFLINE_DB_SCHEMA_VERSION);
       assert.equal(info.journalMode.toLowerCase(), 'wal');
       assert.equal(info.foreignKeysEnabled, true);
+      assert.equal(info.synchronous, 1);
       assert.equal(info.busyTimeout, 5000);
       assert.equal(info.migrations.length, OFFLINE_DB_MIGRATIONS.length);
     } finally {
@@ -173,4 +175,208 @@ test('banco aberto recusa userDataDir diferente e permite a troca somente após 
       }
     }, 'efisco-step52-switch-b-');
   }, 'efisco-step52-switch-a-');
+});
+
+
+test('close é idempotente antes e depois de uma conexão aberta', async () => {
+  closeOfflineDatabase();
+  closeOfflineDatabase();
+
+  assert.throws(
+    () => getOfflineDatabase(),
+    /ainda não foi inicializado/
+  );
+
+  await withTempDir(async (userDataDir) => {
+    initializeOfflineDatabase({ userDataDir });
+
+    closeOfflineDatabase();
+    closeOfflineDatabase();
+
+    assert.throws(
+      () => getOfflineDatabase(),
+      /ainda não foi inicializado/
+    );
+  }, 'efisco-stage7-close-idempotent-');
+});
+
+test('caminho equivalente com segmentos relativos reutiliza o mesmo singleton', async () => {
+  await withTempDir(async (userDataDir) => {
+    try {
+      const first = initializeOfflineDatabase({ userDataDir });
+      const firstDb = getOfflineDatabase();
+
+      const aliasDir = path.join(
+        userDataDir,
+        'alias-segment',
+        '..'
+      );
+
+      const second = initializeOfflineDatabase({
+        userDataDir: aliasDir
+      });
+
+      assert.equal(second.reused, true);
+      assert.equal(getOfflineDatabase(), firstDb);
+      assert.equal(
+        path.resolve(second.path),
+        path.resolve(first.path)
+      );
+    } finally {
+      closeOfflineDatabase();
+    }
+  }, 'efisco-stage7-path-alias-');
+});
+
+test('reopen cria nova conexão, reaplica PRAGMAs e reanexa adapters do boundary DB', async () => {
+  await withTempDir(async (userDataDir) => {
+    let firstDb;
+    let firstAdapters;
+
+    try {
+      initializeOfflineDatabase({ userDataDir });
+      firstDb = getOfflineDatabase();
+
+      firstAdapters = {
+        localConfig:
+          firstDb.__efiscoLocalConfigRepository,
+        finance:
+          firstDb.__efiscoFinanceReadModel,
+        cashRepository:
+          firstDb.__efiscoCashRepository,
+        cashReadModel:
+          firstDb.__efiscoCashReadModel
+      };
+
+      for (const adapter of Object.values(firstAdapters)) {
+        assert.equal(
+          typeof adapter,
+          'object'
+        );
+      }
+    } finally {
+      closeOfflineDatabase();
+    }
+
+    try {
+      const reopened = initializeOfflineDatabase({ userDataDir });
+      const secondDb = getOfflineDatabase();
+
+      assert.equal(reopened.reused, false);
+      assert.notEqual(secondDb, firstDb);
+
+      const secondAdapters = {
+        localConfig:
+          secondDb.__efiscoLocalConfigRepository,
+        finance:
+          secondDb.__efiscoFinanceReadModel,
+        cashRepository:
+          secondDb.__efiscoCashRepository,
+        cashReadModel:
+          secondDb.__efiscoCashReadModel
+      };
+
+      for (const key of Object.keys(secondAdapters)) {
+        assert.equal(
+          typeof secondAdapters[key],
+          'object'
+        );
+        assert.notEqual(
+          secondAdapters[key],
+          firstAdapters[key]
+        );
+      }
+
+      assert.equal(
+        String(
+          Object.values(
+            secondDb.prepare('PRAGMA journal_mode').get()
+          )[0]
+        ).toLowerCase(),
+        'wal'
+      );
+      assert.equal(
+        Number(
+          Object.values(
+            secondDb.prepare('PRAGMA foreign_keys').get()
+          )[0]
+        ),
+        1
+      );
+      assert.equal(
+        Number(
+          Object.values(
+            secondDb.prepare('PRAGMA synchronous').get()
+          )[0]
+        ),
+        1
+      );
+      assert.equal(
+        Number(
+          Object.values(
+            secondDb.prepare('PRAGMA busy_timeout').get()
+          )[0]
+        ),
+        5000
+      );
+    } finally {
+      closeOfflineDatabase();
+    }
+  }, 'efisco-stage7-reopen-adapters-');
+});
+
+
+test('falha de inicialização fecha o singleton e não bloqueia outro userDataDir', async () => {
+  await withTempDir(async (brokenUserDataDir) => {
+    await withTempDir(async (healthyUserDataDir) => {
+      try {
+        initializeOfflineDatabase({
+          userDataDir: brokenUserDataDir
+        });
+      } finally {
+        closeOfflineDatabase();
+      }
+
+      {
+        const raw = new DatabaseSync(
+          expectedDbPath(brokenUserDataDir)
+        );
+        try {
+          raw.prepare(
+            'UPDATE offline_meta SET schema_version = 14 WHERE singleton_id = 1'
+          ).run();
+        } finally {
+          raw.close();
+        }
+      }
+
+      assert.throws(
+        () => initializeOfflineDatabase({
+          userDataDir: brokenUserDataDir
+        }),
+        /Schema SQLite mais novo que este aplicativo/
+      );
+
+      assert.throws(
+        () => getOfflineDatabase(),
+        /ainda não foi inicializado/
+      );
+
+      try {
+        const healthy = initializeOfflineDatabase({
+          userDataDir: healthyUserDataDir
+        });
+
+        assert.equal(healthy.reused, false);
+        assert.equal(
+          path.resolve(healthy.path),
+          path.resolve(
+            expectedDbPath(healthyUserDataDir)
+          )
+        );
+      } finally {
+        closeOfflineDatabase();
+      }
+    }, 'efisco-stage7-init-recovery-b-');
+  }, 'efisco-stage7-init-recovery-a-');
 });

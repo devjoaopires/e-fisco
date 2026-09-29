@@ -24,6 +24,9 @@ const {
   getSyncEmpresaId
 } = require('./offline-device-auth');
 
+const FINANCE_READ_MODEL_CONTEXT_PROPERTY =
+  '__efiscoFinanceReadModel';
+
 function runOfflinePaidSaleFiscalPipeline(...args) {
   return require('./offline-fiscal-sale-pipeline')
     .runOfflinePaidSaleFiscalPipeline(...args);
@@ -1000,81 +1003,26 @@ function buildOfflineCrediarioAtomicInput(saleValue, options = {}) {
 
 function listOfflineSalesForFinance(input = {}) {
   const db = getOfflineDatabase();
-  const empresaId = text(input.empresaId) || resolveEmpresaId();
-  const offset = Math.max(0, Math.trunc(Number(input.offset || 0)));
-  const requestedLimit = Math.trunc(Number(input.limit || 50));
-  const limit = Math.min(
-    100,
-    Math.max(
-      1,
-      Number.isFinite(requestedLimit) ? requestedLimit : 50
-    )
-  );
+  const empresaId =
+    text(input.empresaId) ||
+    resolveEmpresaId();
+  const readModel =
+    db[FINANCE_READ_MODEL_CONTEXT_PROPERTY];
 
-  const totalRow = db.prepare(
-    'SELECT COUNT(*) AS total FROM sales WHERE empresa_id = ?'
-  ).get(empresaId);
+  if (
+    !readModel ||
+    typeof readModel.listOfflineSalesForFinance !==
+      'function'
+  ) {
+    throw new Error(
+      'Read-model financeiro offline não está disponível.'
+    );
+  }
 
-  const rows = db.prepare(
-    'SELECT sale_id, status, total_centavos, occurred_at, payload_json ' +
-    'FROM sales WHERE empresa_id = ? ' +
-    'ORDER BY occurred_at DESC, sale_id DESC LIMIT ? OFFSET ?'
-  ).all(empresaId, limit, offset);
-
-  const vendas = rows.map((row) => {
-    let payload = {};
-    try {
-      payload = row.payload_json
-        ? JSON.parse(String(row.payload_json))
-        : {};
-    } catch (_) {
-      payload = {};
-    }
-
-    return {
-      saleId: String(row.sale_id),
-      saleNumber: text(payload.saleNumber),
-      saleDate:
-        text(payload.paidAt || payload.saleDate) ||
-        String(row.occurred_at),
-      status: String(row.status || ''),
-      paymentStatus: text(payload.paymentStatus) || 'PAGO',
-      paymentMethod: text(payload.paymentMethod),
-      totalValue: Number(row.total_centavos || 0) / 100,
-      operatorId: text(payload.operatorId || payload.operadorId),
-      operadorNome: text(
-        payload.operadorNome ||
-        payload.nomeOperador ||
-        payload.operatorName
-      ),
-      operadorPerfil: text(
-        payload.operadorPerfil ||
-        payload.perfilOperador
-      ),
-      caixaSessaoId: text(payload.caixaSessaoId),
-      vendaInterna: payload.vendaInterna === true,
-      origemVenda: text(payload.origemVenda),
-      crediarioLiquidacao:
-        payload.crediarioLiquidacao === true,
-      offline: true
-    };
+  return readModel.listOfflineSalesForFinance({
+    ...input,
+    empresaId
   });
-
-  const totalCount =
-    Number(totalRow && totalRow.total || 0);
-  const nextOffset =
-    offset + vendas.length;
-
-  return {
-    success: true,
-    empresaId,
-    vendas,
-    offset,
-    limit,
-    totalCount,
-    nextOffset,
-    hasMore: nextOffset < totalCount
-  };
 }
 
 function buildOfflineInternalSaleReceipt(input) {

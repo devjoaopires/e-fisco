@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "completed",
+  "scope": "Etapa 3.6/8 - continuidade, failover e recovery",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e"
+  },
+  "productionChanges": false,
+  "testFile": "tests/unit/offline-continuity-failover-recovery.test.js",
+  "contracts": {
+    "continuity": {
+      "capture": "__scfPdvExportContinuityDraft via captureOnlineContinuityDraft",
+      "restore": "__scfPdvRestoreContinuityDraft via restoreOfflineContinuityDraft",
+      "activeSaleProbe": "__scfPdvHasActiveContinuitySale",
+      "fieldsFrozen": [
+        "saleNumber",
+        "saleId",
+        "products",
+        "currentProduct",
+        "totalValue",
+        "activeProducts",
+        "paymentStageOpen",
+        "paymentStageKind",
+        "paymentContinuity",
+        "operatorName"
+      ]
+    },
+    "failoverMonitor": {
+      "normalFailureThreshold": 3,
+      "normalRecoveryThreshold": 3,
+      "requiresConsecutiveFailures": true,
+      "requiresConsecutiveSuccesses": true,
+      "healthyTickResetsFailures": true,
+      "note": "Hooks explicitos de navigator offline/webRequest continuam caminhos imediatos e separados do monitor."
+    },
+    "recovery": {
+      "blockedBy": [
+        "venda ativa no renderer offline",
+        "carrinho transferido que nao pode ser limpo no online",
+        "autenticacao de sync invalida",
+        "outbox ainda ativa",
+        "identidade de sync ausente",
+        "tenant online diferente da empresa offline",
+        "contador NFC-e remoto indisponivel ou atras do local"
+      ],
+      "successRequires": [
+        "3 probes saudaveis consecutivos",
+        "outbox reconciliada",
+        "tenant online coerente",
+        "contador NFC-e compativel",
+        "overlay offline ocultavel"
+      ]
+    }
+  },
+  "validation": {
+    "targeted": {
+      "tests": 13,
+      "passed": 13,
+      "failed": 0
+    },
+    "testUnit": {
+      "tests": 180,
+      "passed": 180,
+      "failed": 0
+    },
+    "testArchitecture": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "fullSuite": {
+      "tests": 235,
+      "passed": 235,
+      "failed": 0,
+      "skipped": 0
+    },
+    "protectedCiCodeSigningHashesMatchFreeze": true,
+    "packageLockUnchanged": true,
+    "redProductionGapFound": false
+  },
+  "architectureArtifacts": {
+    "boundaryContractsAdded": [
+      "continuity-snapshot-restore",
+      "failover-threshold-state-machine",
+      "recovery-return-online"
+    ],
+    "targetArchitectureCompleted": [
+      "continuity-snapshot-restore",
+      "failover-threshold-state-machine",
+      "recovery-return-online-invariants"
+    ],
+    "moduleResponsibilitiesChanged": false,
+    "dependencyAnalysisChanged": false
+  },
+  "nextStep": "3.7/8 - criar gates dos contratos SCF, printing/frame e serving seguro de assets offline."
+}

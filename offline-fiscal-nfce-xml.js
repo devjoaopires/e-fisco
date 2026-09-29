@@ -19,7 +19,7 @@ const {
 const NFE_NS = 'http://www.portalfiscal.inf.br/nfe';
 
 const SPEC_PROFILE = 'NFCe-4.00-PA-PROD-SN-RTC-transition-step46';
-const PROCESS_VERSION = 'e-fisco-1.0.41';
+const PROCESS_VERSION = 'e-fisco-1.0.44';
 const ALLOWED_CSOSN_NO_CREDIT = new Set(['102', '103', '300', '400']);
 const ALLOWED_PIS_COFINS_NT = new Set(['04', '05', '06', '07', '08', '09']);
 const PAYMENT_CODE_BY_METHOD = Object.freeze({

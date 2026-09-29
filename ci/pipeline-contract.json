@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "release": "1.0.41",
+  "release": "1.0.44",
   "provider": "hybrid-local-powershell-github-actions",
   "entrypoints": {
     "local": "ci/local-ci.ps1",
@@ -99,22 +99,22 @@
     {
       "name": "ci-contract",
       "command": "npm run test:ci",
-      "expectedBaselineTests": 12
+      "expectedBaselineTests": 18
     },
     {
       "name": "unit",
       "command": "npm run test:unit",
-      "expectedBaselineTests": 100
+      "expectedBaselineTests": 186
     },
     {
       "name": "integration",
       "command": "npm run test:integration",
-      "expectedBaselineTests": 52
+      "expectedBaselineTests": 59
     },
     {
       "name": "db",
       "command": "npm run test:db",
-      "expectedBaselineTests": 19
+      "expectedBaselineTests": 22
     },
     {
       "name": "fiscal",
@@ -124,7 +124,7 @@
     {
       "name": "architecture",
       "command": "npm run test:architecture",
-      "expectedBaselineTests": 9
+      "expectedBaselineTests": 12
     },
     {
       "name": "phase1-selftest",
@@ -139,7 +139,7 @@
     {
       "name": "full-suite",
       "command": "npm test",
-      "expectedBaselineTests": 152
+      "expectedBaselineTests": 245
     },
     {
       "name": "build",
@@ -186,13 +186,13 @@
       "failed": 0
     },
     "ciContract": {
-      "tests": 12,
-      "passed": 12,
+      "tests": 18,
+      "passed": 18,
       "failed": 0
     },
     "fullSuite": {
-      "tests": 152,
-      "passed": 152,
+      "tests": 245,
+      "passed": 245,
       "failed": 0
     },
     "releaseValidatorLocalExistingDist": {
@@ -201,6 +201,34 @@
       "installerBytes": 107134616,
       "asarUnpackFiles": 2,
       "exitCode": 0
+    },
+    "releaseValidatorLocalFreshBuild": {
+      "status": "OK",
+      "freshBuild": true,
+      "installerBytes": 107141006,
+      "asarUnpackFiles": 2,
+      "exitCode": 0,
+      "localCi": "OK",
+      "remoteUpload": false
+    },
+    "stage3FinalBaseline": {
+      "ciContract": 18,
+      "unit": 186,
+      "electronSecurity": 58,
+      "integration": 59,
+      "db": 22,
+      "fiscal": 28,
+      "architecture": 12,
+      "fullSuite": 245,
+      "phase1Selftest": "OK",
+      "phase2DbSelftest": "OK",
+      "productionJsSyntax": {
+        "files": 29,
+        "passed": 29,
+        "failed": 0
+      },
+      "freshNsisBuild": "OK",
+      "releaseValidation": "OK"
     },
     "packageLockUnchanged": true,
     "hybridMaterialization": {

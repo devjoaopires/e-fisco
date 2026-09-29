@@ -3,7 +3,7 @@ const {
   ipcRenderer
 } = require('electron');
 
-const VERSION = '1.0.41';
+const VERSION = '1.0.44';
 
 async function invokeChecked(channel, payload, fallbackMessage) {
   const response = await ipcRenderer.invoke(channel, payload);
@@ -124,6 +124,30 @@ contextBridge.exposeInMainWorld(
 
     printMode:
       'WINDOWS_DRIVER_NATIVE_TEXT_QR',
+
+    offlineSelfTest:
+      async () =>
+        await invokeChecked(
+          'efisco:offline-self-test',
+          {},
+          'Auto-teste offline falhou.'
+        ),
+
+    offlineAutoRepair:
+      async () =>
+        await invokeChecked(
+          'efisco:offline-auto-repair',
+          {},
+          'Auto-reparo offline falhou.'
+        ),
+
+    offlineDiagnosticReport:
+      async () =>
+        await invokeChecked(
+          'efisco:offline-diagnostic-report',
+          {},
+          'Relatório técnico offline falhou.'
+        ),
 
     offlineOperatorLogin:
       async (payload = {}) =>

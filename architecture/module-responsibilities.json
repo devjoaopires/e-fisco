@@ -1,312 +1,1563 @@
 {
-  "schemaVersion": 1,
-  "release": "1.0.41",
-  "scope": "production-javascript",
-  "generatedFrom": "static local require('./...') relationships and current module boundaries",
-  "counts": {
-    "productionJsFiles": 29,
-    "exportedModules": 26,
-    "internalRequireEdges": 54
-  },
-  "layers": [
-    {
-      "id": "electron-entrypoints",
-      "responsibility": "Processo Electron, bridge segura do renderer e utilitário de pareamento.",
-      "modules": [
-        "main.js",
-        "preload.js",
-        "phase2-pair-device.js"
-      ]
+    "schemaVersion": 1,
+    "release": "1.0.44",
+    "scope": "production-javascript",
+    "generatedFrom": "static local require('./...') relationships and current module boundaries",
+    "counts": {
+        "productionJsFiles": 225,
+        "exportedModules": 93,
+        "internalRequireEdges": 147
     },
-    {
-      "id": "application-services",
-      "responsibility": "Casos de uso offline de produto, caixa e venda.",
-      "modules": [
-        "offline-product-service.js",
-        "offline-cash-service.js",
-        "offline-sale-service.js"
-      ]
+    "layers": [
+        {
+            "id": "electron-entrypoints",
+            "responsibility": "Processo Electron, bridge segura do renderer e utilitário de pareamento.",
+            "modules": [
+                "main.js",
+                "preload.js",
+                "phase2-pair-device.js"
+            ]
+        },
+        {
+            "id": "desktop-bootstrap",
+            "responsibility": "Lifecycle do app Electron, single-instance/quit/activate e bootstrap inicial de paths, SQLite, device auth e sync local, com dependências injetadas pelo composition root.",
+            "modules": [
+                "desktop/bootstrap/app-lifecycle.js",
+                "desktop/bootstrap/runtime-bootstrap.js"
+            ]
+        },
+        {
+            "id": "desktop-security",
+            "responsibility": "Políticas de navegação/popup e autorização IPC do Electron, incluindo validação de origin, sender, top-frame, transporte e capability.",
+            "modules": [
+                "desktop/security/navigation-policy.js",
+                "desktop/security/ipc-authorization.js"
+            ]
+        },
+        {
+            "id": "desktop-ipc",
+            "responsibility": "Registro dos handlers IPC extraídos do processo principal, preservando autorização específica por canal e envelopes existentes.",
+            "modules": [
+                "desktop/ipc/offline-handlers.js"
+            ]
+        },
+        {
+            "id": "desktop-windows",
+            "responsibility": "Criação, lifecycle e layout das superfícies Electron mainWindow/offlineView, com paths de recursos injetados pelo composition root.",
+            "modules": [
+                "desktop/windows/main-window.js",
+                "desktop/windows/offline-diagnostic-view.js",
+                "desktop/windows/offline-renderer-health.js",
+                "desktop/windows/offline-renderer-recovery.js",
+                "desktop/windows/offline-view.js",
+                "desktop/windows/window-layout.js"
+            ]
+        },
+        {
+            "id": "offline-auth-session",
+            "responsibility": "Owner da sessão do operador offline, backoff de login, verificação local/provisória de credenciais e provisionamento protegido.",
+            "modules": [
+                "offline/auth-session/authorization.js",
+                "offline/auth-session/operator-session.js",
+                "offline/auth-session/operator-verifier.js",
+                "offline/auth-session/operator-provisioning.js"
+            ]
+        },
+        {
+            "id": "offline-continuity",
+            "responsibility": "Captura, enriquecimento, espelhamento, restauração e limpeza do draft de continuidade do PDV, com estado/timer de mirror sob owner único.",
+            "modules": [
+                "offline/continuity/continuity-mirror.js",
+                "offline/continuity/continuity-recovery.js"
+            ]
+        },
+        {
+            "id": "offline-failover",
+            "responsibility": "Probes de conectividade, threshold de três falhas e transição ONLINE->OFFLINE, incluindo gatilhos de navigator, webRequest e falha de main frame.",
+            "modules": [
+                "offline/failover/connectivity-probes.js",
+                "offline/failover/failover-controller.js"
+            ]
+        },
+        {
+            "id": "offline-runtime",
+            "responsibility": "Runtime offline, UI overlay/settle, atalhos F4/F5, monitor periódico e recovery OFFLINE->ONLINE com blockers e reconciliação preservados.",
+            "modules": [
+                "offline/runtime/runtime-controller.js",
+                "offline/runtime/ui-runtime.js",
+                "offline/runtime/shortcuts.js"
+            ]
+        },
+        {
+            "id": "offline-sync-coordination",
+            "responsibility": "Coordenação do pull de referências/produtos e processamento da outbox geral, mantendo estado de coalescing fora do composition root.",
+            "modules": [
+                "offline/sync/reference-cache.js",
+                "offline/sync/product-cache.js",
+                "offline/sync/outbox-coordinator.js"
+            ]
+        },
+        {
+            "id": "offline-fiscal-coordination",
+            "responsibility": "Coordenação do runtime fiscal e da ponte segura do contador NFC-e, preservando lease, reconciliação e confiança de frame.",
+            "modules": [
+                "offline/fiscal/fiscal-runtime-coordinator.js",
+                "offline/fiscal/fiscal-counter-bridge.js"
+            ]
+        },
+        {
+            "id": "printing",
+            "responsibility": "Fila serial de impressão, execução do driver Windows e bridges de frame/TOP com confiança de origin/frame e payload one-shot.",
+            "modules": [
+                "printing/print-queue.js",
+                "printing/frame-print-bridge.js",
+                "printing/windows-driver.js"
+            ]
+        },
+        {
+            "id": "application-services",
+            "responsibility": "Casos de uso offline de produto, caixa e venda.",
+            "modules": [
+                "offline-product-service.js",
+                "offline-cash-service.js",
+                "offline-sale-service.js"
+            ]
+        },
+        {
+            "id": "domain-values",
+            "responsibility": "Normalização e cálculos determinísticos sem I/O.",
+            "modules": [
+                "offline-sale-values.js",
+                "offline-fiscal-values.js"
+            ]
+        },
+        {
+            "id": "persistence",
+            "responsibility": "SQLite, migrations, caches, transações atômicas, estoque, caixa, venda, crediário e outboxes.",
+            "modules": [
+                "offline-db.js",
+                "offline-db/connection.js",
+                "offline-db/transaction.js",
+                "offline-db/migrations/index.js",
+                "offline-db/migrations/versions/index.js",
+                "offline-db/repositories/local-config.js",
+                "offline-db/repositories/operator-credentials.js",
+                "offline-db/repositories/prepared-companies.js",
+                "offline-db/repositories/products.js",
+                "offline-db/repositories/customers.js",
+                "offline-db/repositories/suppliers.js",
+                "offline-db/read-models/finance.js",
+                "offline-db/outbox/sync-outbox.js",
+                "offline-db/read-models/outbox-status.js",
+                "offline-db/repositories/cash.js",
+                "offline-db/repositories/finance.js",
+                "offline-db/read-models/cash.js",
+                "offline-db/repositories/fiscal-profile.js",
+                "offline-db/read-models/fiscal.js",
+                "offline-db/outbox/fiscal-outbox.js",
+                "offline-db/repositories/stock.js",
+                "offline-db/repositories/fiscal-numbering.js",
+                "offline-db/repositories/crediario.js",
+                "offline-db/read-models/crediario.js",
+                "offline-db/atomic/crediario.js",
+                "offline-db/repositories/sales.js",
+                "offline-db/atomic/sale.js"
+            ]
+        },
+        {
+            "id": "identity-sync",
+            "responsibility": "Identidade do device, pareamento, transporte HTTP e processamento da outbox geral.",
+            "modules": [
+                "offline-device-auth.js",
+                "offline-device-pairing.js",
+                "offline-sync-http-transport.js",
+                "offline-outbox-worker.js"
+            ]
+        },
+        {
+            "id": "fiscal-credentials",
+            "responsibility": "Provisionamento, armazenamento protegido e material A1.",
+            "modules": [
+                "offline-fiscal-certificate-provisioning.js",
+                "offline-fiscal-certificate-store.js",
+                "offline-fiscal-xml-signer.js"
+            ]
+        },
+        {
+            "id": "fiscal-document",
+            "responsibility": "Geração, assinatura, suplemento QR, DANFE e finalização local da NFC-e.",
+            "modules": [
+                "offline-fiscal-contingency-service.js",
+                "offline-fiscal-nfce-xml.js",
+                "offline-fiscal-nfce-qrcode.js",
+                "offline-fiscal-nfce-danfe.js"
+            ]
+        },
+        {
+            "id": "fiscal-numbering",
+            "responsibility": "Reserva remota, inventário e manutenção de leases de numeração.",
+            "modules": [
+                "offline-fiscal-number-service.js",
+                "offline-fiscal-number-maintenance.js"
+            ]
+        },
+        {
+            "id": "fiscal-orchestration",
+            "responsibility": "Preparação da venda fiscal, outbox fiscal, runtime de reconexão e transporte SVRS.",
+            "modules": [
+                "offline-fiscal-sale-pipeline.js",
+                "offline-fiscal-outbox-worker.js",
+                "offline-fiscal-runtime.js",
+                "offline-fiscal-svrs-transport.js",
+                "offline-fiscal-trust-anchors.js"
+            ]
+        },
+        {
+            "id": "updater",
+            "responsibility": "Atualização obrigatória do desktop, helper externo e preparação/monitoramento do pacote standby.",
+            "modules": [
+                "updater/update-controller.js",
+                "updater/standby-controller.js"
+            ]
+        },
+        {
+            "id": "pdv-contracts",
+            "responsibility": "Contratos clássicos same-origin do PDV para nomes de mensagens SCF_*, eventos scf:* e chaves/prefixos/separadores/TTL/shapes de Storage; sem adapters nem state owners.",
+            "modules": [
+                "offline-ui/pdv/contracts/messages.js",
+                "offline-ui/pdv/contracts/events.js",
+                "offline-ui/pdv/contracts/storage-keys.js"
+            ]
+        },
+        {
+            "id": "pdv-infra",
+            "responsibility": "Adapters clássicos same-origin do PDV para bridge com shell, event bus, Storage, DOM e rede do navegador; não possuem state owner nem regra de domínio.",
+            "modules": [
+                "offline-ui/pdv/infra/shell-bridge.js",
+                "offline-ui/pdv/infra/event-bus.js",
+                "offline-ui/pdv/infra/storage.js",
+                "offline-ui/pdv/infra/dom.js",
+                "offline-ui/pdv/infra/browser-network.js"
+            ]
+        },
+        {
+            "id": "pdv-state",
+            "responsibility": "Owners canônicos do estado transversal do PDV: sessão/perfil, runtime/conectividade e navegação. Não dependem de compat/legacy-globals.js nem assumem estado de domínio P06-P18.",
+            "modules": [
+                "offline-ui/pdv/state/session-state.js",
+                "offline-ui/pdv/state/runtime-state.js",
+                "offline-ui/pdv/state/navigation-state.js"
+            ]
+        },
+        {
+            "id": "pdv-compat",
+            "responsibility": "Compatibilidade de globals legados via accessors/delegates que escrevem/leem os state owners P04; globals não são fonte da verdade.",
+            "modules": [
+                "offline-ui/pdv/compat/legacy-globals.js"
+            ]
+        },
+        {
+            "id": "pdv-bootstrap",
+            "responsibility": "Composition root clássico do renderer PDV: valida contracts/infra/state/compat, instala compatibilidade e expõe snapshot somente leitura antes dos consumidores inline.",
+            "modules": [
+                "offline-ui/pdv/bootstrap.js"
+            ]
+        },
+        {
+            "id": "pdv-shared",
+            "responsibility": "Valores e helpers renderer compartilhados extraídos em P05; puros, sem DOM/Storage/rede e sem estado de domínio.",
+            "modules": [
+                "offline-ui/pdv/shared/values/ui-values.js",
+                "offline-ui/pdv/shared/helpers/text-format.js"
+            ]
+        },
+        {
+            "id": "pdv-ui",
+            "responsibility": "Componentes e navegação UI transversais extraídos em P05; consomem contracts/infra/state/shared e preservam ordem clássica/timing do monólito.",
+            "modules": [
+                "offline-ui/pdv/ui/components/company-header.js",
+                "offline-ui/pdv/ui/components/connectivity-indicator.js",
+                "offline-ui/pdv/ui/navigation/access-guard.js"
+            ]
+        },
+        {
+            "id": "pdv-domains",
+            "responsibility": "Owners por domínio do renderer materializados progressivamente na Etapa 9; P06 products/search/NCM, P07 customer, P08 suppliers/coordinator, P09 history, P10 inventory, P11 finance, P12 cash, P13 crediario, P14 sale/payment, P15 continuity, P16 fiscal, P17 superadmin/A1 e P18 printing reutilizam contracts/infra/state/shared sem criar bridges paralelas.",
+            "modules": [
+                "offline-ui/pdv/domains/products/domain.js",
+                "offline-ui/pdv/domains/products/search.js",
+                "offline-ui/pdv/domains/customer/domain.js",
+                "offline-ui/pdv/domains/customer/create-update.js",
+                "offline-ui/pdv/domains/customer/list.js",
+                "offline-ui/pdv/domains/customer/edit.js",
+                "offline-ui/pdv/domains/customer/delete.js",
+                "offline-ui/pdv/domains/suppliers/domain.js",
+                "offline-ui/pdv/domains/suppliers/registration-ui.js",
+                "offline-ui/pdv/domains/suppliers/crud.js",
+                "offline-ui/pdv/domains/suppliers/coordinator.js",
+                "offline-ui/pdv/domains/history/domain.js",
+                "offline-ui/pdv/domains/history/core.js",
+                "offline-ui/pdv/domains/history/title.js",
+                "offline-ui/pdv/domains/history/compact-card.js",
+                "offline-ui/pdv/domains/history/compact-card-fix.js",
+                "offline-ui/pdv/domains/history/inline-receipt.js",
+                "offline-ui/pdv/domains/history/aligned-card.js",
+                "offline-ui/pdv/domains/history/table-layout.js",
+                "offline-ui/pdv/domains/history/second-copy-click.js",
+                "offline-ui/pdv/domains/history/receipt-close-menu.js",
+                "offline-ui/pdv/domains/history/calendar.js",
+                "offline-ui/pdv/domains/history/embedded-view.js",
+                "offline-ui/pdv/domains/history/calendar-photo.js",
+                "offline-ui/pdv/domains/history/second-copy-state.js",
+                "offline-ui/pdv/domains/history/close-restore-dock.js",
+                "offline-ui/pdv/domains/history/close-document-reset.js",
+                "offline-ui/pdv/domains/history/monthly-dashboard.js",
+                "offline-ui/pdv/domains/history/filters.js",
+                "offline-ui/pdv/domains/history/annual-dashboard.js",
+                "offline-ui/pdv/domains/history/reset-month-on-exit.js",
+                "offline-ui/pdv/domains/inventory/domain.js",
+                "offline-ui/pdv/domains/inventory/core.js",
+                "offline-ui/pdv/domains/inventory/decor.js",
+                "offline-ui/pdv/domains/inventory/dashboard-decision.js",
+                "offline-ui/pdv/domains/inventory/dashboard-v3.js",
+                "offline-ui/pdv/domains/inventory/dashboard-v4.js",
+                "offline-ui/pdv/domains/inventory/dashboard-v5.js",
+                "offline-ui/pdv/domains/inventory/dashboard-cleanup.js",
+                "offline-ui/pdv/domains/inventory/right-panel.js",
+                "offline-ui/pdv/domains/inventory/annual-sales-dashboard.js",
+                "offline-ui/pdv/domains/inventory/keyboard-navigation.js",
+                "offline-ui/pdv/domains/finance/domain.js",
+                "offline-ui/pdv/domains/finance/core.js",
+                "offline-ui/pdv/domains/finance/decor-grid.js",
+                "offline-ui/pdv/domains/finance/summary.js",
+                "offline-ui/pdv/domains/finance/exit-calendar.js",
+                "offline-ui/pdv/domains/finance/exit-form.js",
+                "offline-ui/pdv/domains/finance/payable-status-reload.js",
+                "offline-ui/pdv/domains/finance/entry-calendar-form.js",
+                "offline-ui/pdv/domains/finance/entry-cash-sync.js",
+                "offline-ui/pdv/domains/finance/entry-label.js",
+                "offline-ui/pdv/domains/finance/receivable-status.js",
+                "offline-ui/pdv/domains/finance/calendar-toggle.js",
+                "offline-ui/pdv/domains/finance/entry-month-calendar.js",
+                "offline-ui/pdv/domains/cash/domain.js",
+                "offline-ui/pdv/domains/cash/core.js",
+                "offline-ui/pdv/domains/cash/receipt.js",
+                "offline-ui/pdv/domains/cash/closing-term-back.js",
+                "offline-ui/pdv/domains/cash/back-label.js",
+                "offline-ui/pdv/domains/cash/return-to-pdv.js",
+                "offline-ui/pdv/domains/cash/receipt-close-on-leave.js",
+                "offline-ui/pdv/domains/crediario/domain.js",
+                "offline-ui/pdv/domains/crediario/offline-confirm-visibility.js",
+                "offline-ui/pdv/domains/crediario/core.js",
+                "offline-ui/pdv/domains/crediario/focus-protection.js",
+                "offline-ui/pdv/domains/crediario/back.js",
+                "offline-ui/pdv/domains/crediario/side-menu-lock.js",
+                "offline-ui/pdv/domains/crediario/shortcut-legend.js",
+                "offline-ui/pdv/domains/crediario/list-inputs-lock.js",
+                "offline-ui/pdv/domains/crediario/return-to-pdv.js",
+                "offline-ui/pdv/domains/crediario/detail-pdv-close.js",
+                "offline-ui/pdv/domains/crediario/list-top-back.js",
+                "offline-ui/pdv/domains/crediario/list-keyboard.js",
+                "offline-ui/pdv/domains/sale-payment/domain.js",
+                "offline-ui/pdv/domains/sale-payment/sale-core.js",
+                "offline-ui/pdv/domains/sale-payment/payment-core.js",
+                "offline-ui/pdv/domains/sale-payment/finalize-standby.js",
+                "offline-ui/pdv/domains/sale-payment/finalize-menu.js",
+                "offline-ui/pdv/domains/sale-payment/finalize-back.js",
+                "offline-ui/pdv/domains/sale-payment/identification-back.js",
+                "offline-ui/pdv/domains/sale-payment/identification-person-nav.js",
+                "offline-ui/pdv/domains/sale-payment/identification-fields-nav.js",
+                "offline-ui/pdv/domains/sale-payment/identification-autofocus.js",
+                "offline-ui/pdv/domains/sale-payment/identification-optional.js",
+                "offline-ui/pdv/domains/sale-payment/auto-payment.js",
+                "offline-ui/pdv/domains/sale-payment/normal-sale-f11-lock.js",
+                "offline-ui/pdv/domains/sale-payment/internal-sale-toggle.js",
+                "offline-ui/pdv/domains/continuity/domain.js",
+                "offline-ui/pdv/domains/continuity/core.js",
+                "offline-ui/pdv/domains/fiscal/domain.js",
+                "offline-ui/pdv/domains/fiscal/receipt.js",
+                "offline-ui/pdv/domains/fiscal/completed-footer.js",
+                "offline-ui/pdv/domains/fiscal/processing-footer.js",
+                "offline-ui/pdv/domains/superadmin/domain.js",
+                "offline-ui/pdv/domains/superadmin/customer-shell.js",
+                "offline-ui/pdv/domains/superadmin/company-form.js",
+                "offline-ui/pdv/domains/superadmin/fiscal-certificate-selector.js",
+                "offline-ui/pdv/domains/superadmin/contact-fields.js",
+                "offline-ui/pdv/domains/superadmin/company-fiscal-tabs.js",
+                "offline-ui/pdv/domains/superadmin/certificate-a1.js",
+                "offline-ui/pdv/domains/superadmin/companies-panel.js",
+                "offline-ui/pdv/domains/superadmin/company-edit.js",
+                "offline-ui/pdv/domains/superadmin/primary-action.js",
+                "offline-ui/pdv/domains/superadmin/form-state.js",
+                "offline-ui/pdv/domains/superadmin/company-details.js",
+                "offline-ui/pdv/domains/superadmin/details-cleanup.js",
+                "offline-ui/pdv/domains/superadmin/residual-arrow-cleanup.js",
+                "offline-ui/pdv/domains/printing/domain.js",
+                "offline-ui/pdv/domains/printing/frame-controller.js",
+                "offline-ui/pdv/domains/printing/history-receipt-view.js"
+            ]
+        },
+        {
+            "id": "desktop-support",
+            "responsibility": "Standby/rollback e servidor HTTP loopback da interface offline.",
+            "modules": [
+                "offline-standby.js",
+                "offline-ui-server.js"
+            ]
+        },
+        {
+            "id": "offline-diagnostics",
+            "responsibility": "Diagnóstico consolidado dos pré-requisitos de operação offline, sem expor segredos e reutilizando os owners existentes.",
+            "modules": [
+                "offline/diagnostics/auto-repair.js",
+                "offline/diagnostics/codes.js",
+                "offline/diagnostics/prerequisites.js",
+                "offline/diagnostics/report.js",
+                "offline/diagnostics/self-test.js",
+                "offline/diagnostics/presentation.js"
+            ]
+        },
+        {
+            "id": "offline-telemetry",
+            "responsibility": "Transformação estritamente allowlisted do diagnóstico local em payload de telemetria versionado, pseudonimizado, deduplicável e limitado por tamanho, sem transporte de rede.",
+            "modules": [
+                "offline/telemetry/payload.js",
+                "offline/telemetry/queue.js",
+                "offline/telemetry/sender.js"
+            ]
+        }
+    ],
+    "directDependencies": {
+        "offline-db.js": [
+            "offline-db/connection.js",
+            "offline-db/migrations/index.js",
+            "offline-db/transaction.js",
+            "offline-db/repositories/operator-credentials.js",
+            "offline-db/repositories/prepared-companies.js",
+            "offline-db/repositories/products.js",
+            "offline-db/repositories/customers.js",
+            "offline-db/repositories/suppliers.js",
+            "offline-db/read-models/finance.js",
+            "offline-db/outbox/sync-outbox.js",
+            "offline-db/read-models/outbox-status.js",
+            "offline-db/repositories/cash.js",
+            "offline-db/repositories/finance.js",
+            "offline-db/read-models/cash.js",
+            "offline-db/repositories/fiscal-profile.js",
+            "offline-db/read-models/fiscal.js",
+            "offline-db/outbox/fiscal-outbox.js",
+            "offline-db/repositories/stock.js",
+            "offline-db/repositories/fiscal-numbering.js",
+            "offline-db/repositories/crediario.js",
+            "offline-db/read-models/crediario.js",
+            "offline-db/atomic/crediario.js",
+            "offline-db/repositories/sales.js",
+            "offline-db/atomic/sale.js"
+        ],
+        "offline-db/migrations/index.js": [
+            "offline-db/migrations/versions/index.js"
+        ],
+        "offline-db/migrations/versions/index.js": [
+            "offline-db/transaction.js"
+        ],
+        "main.js": [
+            "desktop/bootstrap/app-lifecycle.js",
+            "desktop/bootstrap/runtime-bootstrap.js",
+            "desktop/ipc/offline-handlers.js",
+            "desktop/security/ipc-authorization.js",
+            "desktop/security/navigation-policy.js",
+            "desktop/windows/main-window.js",
+            "desktop/windows/offline-diagnostic-view.js",
+            "desktop/windows/offline-renderer-health.js",
+            "desktop/windows/offline-renderer-recovery.js",
+            "desktop/windows/offline-view.js",
+            "desktop/windows/window-layout.js",
+            "offline/auth-session/authorization.js",
+            "offline/auth-session/operator-provisioning.js",
+            "offline/auth-session/operator-session.js",
+            "offline/auth-session/operator-verifier.js",
+            "offline/continuity/continuity-mirror.js",
+            "offline/continuity/continuity-recovery.js",
+            "offline/diagnostics/auto-repair.js",
+            "offline/diagnostics/codes.js",
+            "offline/diagnostics/prerequisites.js",
+            "offline/diagnostics/report.js",
+            "offline/diagnostics/self-test.js",
+            "offline/failover/connectivity-probes.js",
+            "offline/failover/failover-controller.js",
+            "offline/fiscal/fiscal-counter-bridge.js",
+            "offline/fiscal/fiscal-runtime-coordinator.js",
+            "offline/runtime/runtime-controller.js",
+            "offline/runtime/shortcuts.js",
+            "offline/runtime/ui-runtime.js",
+            "offline/sync/outbox-coordinator.js",
+            "offline/sync/product-cache.js",
+            "offline/sync/reference-cache.js",
+            "offline/telemetry/payload.js",
+            "offline/telemetry/queue.js",
+            "offline/telemetry/sender.js",
+            "offline-cash-service.js",
+            "offline-db.js",
+            "offline-device-auth.js",
+            "offline-device-pairing.js",
+            "offline-fiscal-certificate-provisioning.js",
+            "offline-fiscal-nfce-danfe.js",
+            "offline-fiscal-runtime.js",
+            "offline-outbox-worker.js",
+            "offline-product-service.js",
+            "offline-sale-service.js",
+            "offline-sync-http-transport.js",
+            "offline-ui-server.js",
+            "printing/frame-print-bridge.js",
+            "printing/print-queue.js",
+            "printing/windows-driver.js",
+            "updater/standby-controller.js",
+            "updater/update-controller.js",
+            "offline/diagnostics/presentation.js"
+        ],
+        "updater/standby-controller.js": [
+            "offline-standby.js"
+        ],
+        "offline/auth-session/operator-provisioning.js": [
+            "offline/auth-session/operator-verifier.js"
+        ],
+        "offline-cash-service.js": [
+            "offline-db.js",
+            "offline-device-auth.js"
+        ],
+        "offline-fiscal-certificate-provisioning.js": [
+            "offline-fiscal-certificate-store.js",
+            "offline-sync-http-transport.js"
+        ],
+        "offline-fiscal-contingency-service.js": [
+            "offline-db.js",
+            "offline-fiscal-nfce-xml.js",
+            "offline-fiscal-xml-signer.js"
+        ],
+        "offline-fiscal-nfce-danfe.js": [
+            "offline-db.js",
+            "offline-fiscal-nfce-qrcode.js"
+        ],
+        "offline-fiscal-nfce-qrcode.js": [
+            "offline-db.js",
+            "offline-fiscal-certificate-store.js",
+            "offline-fiscal-values.js",
+            "offline-fiscal-xml-signer.js"
+        ],
+        "offline-fiscal-nfce-xml.js": [
+            "offline-fiscal-values.js"
+        ],
+        "offline-fiscal-number-maintenance.js": [
+            "offline-db.js",
+            "offline-fiscal-number-service.js",
+            "offline-fiscal-values.js"
+        ],
+        "offline-fiscal-number-service.js": [
+            "offline-db.js",
+            "offline-sync-http-transport.js"
+        ],
+        "offline-fiscal-outbox-worker.js": [
+            "offline-db.js",
+            "offline-fiscal-nfce-qrcode.js"
+        ],
+        "offline-fiscal-runtime.js": [
+            "offline-fiscal-outbox-worker.js",
+            "offline-fiscal-svrs-transport.js"
+        ],
+        "offline-fiscal-sale-pipeline.js": [
+            "offline-db.js",
+            "offline-fiscal-certificate-store.js",
+            "offline-fiscal-contingency-service.js",
+            "offline-fiscal-nfce-danfe.js",
+            "offline-fiscal-nfce-qrcode.js"
+        ],
+        "offline-fiscal-svrs-transport.js": [
+            "offline-fiscal-certificate-store.js",
+            "offline-fiscal-trust-anchors.js"
+        ],
+        "offline-fiscal-xml-signer.js": [
+            "offline-fiscal-certificate-store.js"
+        ],
+        "offline-outbox-worker.js": [
+            "offline-db.js"
+        ],
+        "offline-product-service.js": [
+            "offline-db.js",
+            "offline-device-auth.js"
+        ],
+        "offline-sale-service.js": [
+            "offline-db.js",
+            "offline-device-auth.js",
+            "offline-fiscal-sale-pipeline.js",
+            "offline-sale-values.js"
+        ],
+        "phase2-pair-device.js": [
+            "offline-db.js",
+            "offline-device-auth.js",
+            "offline-device-pairing.js"
+        ],
+        "offline-db/repositories/local-config.js": [],
+        "offline-db/repositories/operator-credentials.js": [],
+        "offline-db/repositories/prepared-companies.js": [],
+        "offline-db/connection.js": [
+            "offline-db/repositories/local-config.js",
+            "offline-db/read-models/finance.js",
+            "offline-db/repositories/cash.js",
+            "offline-db/read-models/cash.js"
+        ],
+        "offline-db/repositories/products.js": [],
+        "offline-db/repositories/customers.js": [],
+        "offline-db/repositories/suppliers.js": [],
+        "offline-db/read-models/finance.js": [],
+        "offline-db/outbox/sync-outbox.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/read-models/outbox-status.js": [],
+        "offline-db/repositories/cash.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/repositories/finance.js": [],
+        "offline-db/read-models/cash.js": [],
+        "offline-db/repositories/fiscal-profile.js": [],
+        "offline-db/read-models/fiscal.js": [],
+        "offline-db/outbox/fiscal-outbox.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/repositories/stock.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/repositories/fiscal-numbering.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/repositories/crediario.js": [],
+        "offline-db/read-models/crediario.js": [
+            "offline-db/repositories/crediario.js"
+        ],
+        "offline-db/atomic/crediario.js": [
+            "offline-db/transaction.js",
+            "offline-db/repositories/products.js",
+            "offline-db/repositories/customers.js",
+            "offline-db/repositories/stock.js",
+            "offline-db/read-models/crediario.js",
+            "offline-db/outbox/sync-outbox.js"
+        ],
+        "offline-db/repositories/sales.js": [
+            "offline-db/transaction.js"
+        ],
+        "offline-db/atomic/sale.js": [
+            "offline-db/transaction.js",
+            "offline-db/repositories/products.js",
+            "offline-db/repositories/stock.js",
+            "offline-db/read-models/finance.js",
+            "offline-db/read-models/fiscal.js",
+            "offline-db/read-models/crediario.js",
+            "offline-db/outbox/sync-outbox.js"
+        ],
+        "offline/diagnostics/prerequisites.js": [
+            "offline/diagnostics/codes.js"
+        ],
+        "offline/diagnostics/presentation.js": []
     },
-    {
-      "id": "domain-values",
-      "responsibility": "Normalização e cálculos determinísticos sem I/O.",
-      "modules": [
-        "offline-sale-values.js",
-        "offline-fiscal-values.js"
-      ]
-    },
-    {
-      "id": "persistence",
-      "responsibility": "SQLite, migrations, caches, transações atômicas, estoque, caixa, venda, crediário e outboxes.",
-      "modules": [
-        "offline-db.js"
-      ]
-    },
-    {
-      "id": "identity-sync",
-      "responsibility": "Identidade do device, pareamento, transporte HTTP e processamento da outbox geral.",
-      "modules": [
-        "offline-device-auth.js",
-        "offline-device-pairing.js",
-        "offline-sync-http-transport.js",
-        "offline-outbox-worker.js"
-      ]
-    },
-    {
-      "id": "fiscal-credentials",
-      "responsibility": "Provisionamento, armazenamento protegido e material A1.",
-      "modules": [
-        "offline-fiscal-certificate-provisioning.js",
-        "offline-fiscal-certificate-store.js",
-        "offline-fiscal-xml-signer.js"
-      ]
-    },
-    {
-      "id": "fiscal-document",
-      "responsibility": "Geração, assinatura, suplemento QR, DANFE e finalização local da NFC-e.",
-      "modules": [
-        "offline-fiscal-contingency-service.js",
-        "offline-fiscal-nfce-xml.js",
-        "offline-fiscal-nfce-qrcode.js",
-        "offline-fiscal-nfce-danfe.js"
-      ]
-    },
-    {
-      "id": "fiscal-numbering",
-      "responsibility": "Reserva remota, inventário e manutenção de leases de numeração.",
-      "modules": [
-        "offline-fiscal-number-service.js",
-        "offline-fiscal-number-maintenance.js"
-      ]
-    },
-    {
-      "id": "fiscal-orchestration",
-      "responsibility": "Preparação da venda fiscal, outbox fiscal, runtime de reconexão e transporte SVRS.",
-      "modules": [
-        "offline-fiscal-sale-pipeline.js",
-        "offline-fiscal-outbox-worker.js",
-        "offline-fiscal-runtime.js",
-        "offline-fiscal-svrs-transport.js",
-        "offline-fiscal-trust-anchors.js"
-      ]
-    },
-    {
-      "id": "desktop-support",
-      "responsibility": "Standby/rollback e servidor HTTP loopback da interface offline.",
-      "modules": [
-        "offline-standby.js",
-        "offline-ui-server.js"
-      ]
+    "modules": {
+        "main.js": {
+            "kind": "entrypoint",
+            "responsibility": "Composition root Electron e fachada de compatibilidade: resolve composição, instancia controllers/bootstrap e injeta dependências; lifecycle e runtime bootstrap possuem owners extraídos."
+        },
+        "desktop/bootstrap/app-lifecycle.js": {
+            "kind": "desktop-bootstrap",
+            "responsibility": "Owner do single-instance lock e dos eventos whenReady/second-instance/before-quit/window-all-closed/activate, delegando bootstrap e criação de janela por callbacks."
+        },
+        "desktop/bootstrap/runtime-bootstrap.js": {
+            "kind": "desktop-bootstrap",
+            "responsibility": "Owner da resolução de paths de recursos a partir do app root e do bootstrap inicial SQLite/device auth/sync, preservando falha isolada e estados TRUSTED_LOCAL/VALID."
+        },
+        "desktop/security/navigation-policy.js": {
+            "kind": "desktop-security-policy",
+            "responsibility": "Implementação única das decisões de navegação/popup, validação de origins, precedência de event.url e sanitização de URLs para log."
+        },
+        "desktop/security/ipc-authorization.js": {
+            "kind": "desktop-security-policy",
+            "responsibility": "Owner da matriz congelada dos 22 canais IPC e da autorização por transporte, superfície, origin exato, top-frame e identidade do sender."
+        },
+        "desktop/ipc/offline-handlers.js": {
+            "kind": "desktop-ipc-handler",
+            "responsibility": "Owner dos oito handlers OFFLINE_READ e dos seis handlers OFFLINE_MUTATION, preservando autorização por canal, envelopes e dependências injetadas sem assumir os canais fiscais/superadmin."
+        },
+        "desktop/windows/main-window.js": {
+            "kind": "desktop-window-lifecycle",
+            "responsibility": "Cria a BrowserWindow com WebPreferences endurecidas e registra eventos de lifecycle/ready-to-show; recebe icon/preload já resolvidos pelo composition root."
+        },
+        "desktop/windows/offline-view.js": {
+            "kind": "desktop-window-lifecycle",
+            "responsibility": "Cria, carrega, anexa e fecha a WebContentsView offline com WebPreferences endurecidas; recebe preload e runtime URL/UA por injeção."
+        },
+        "desktop/windows/window-layout.js": {
+            "kind": "desktop-window-layout",
+            "responsibility": "Implementação única dos bounds visível, estacionado e staging da offlineView e do redimensionamento conforme o modo online/offline."
+        },
+        "offline/auth-session/authorization.js": {
+            "kind": "offline-auth-session",
+            "responsibility": "Owner do estado de autorização offline do device e das regras fail-closed para mutações."
+        },
+        "offline/auth-session/operator-session.js": {
+            "kind": "offline-auth-session",
+            "responsibility": "Owner da sessão autenticada do operador, identidade online confirmada e backoff de login offline."
+        },
+        "offline/auth-session/operator-verifier.js": {
+            "kind": "offline-auth-session",
+            "responsibility": "Owner do candidato de verifier e da validação local SCRYPT/PBKDF2 protegida por safeStorage."
+        },
+        "offline/auth-session/operator-provisioning.js": {
+            "kind": "offline-auth-session",
+            "responsibility": "Persistência/provisionamento de credenciais de operador, incluindo bootstrap e publicação autenticada do verifier."
+        },
+        "offline/continuity/continuity-mirror.js": {
+            "kind": "offline-continuity",
+            "responsibility": "Owner do draft de continuidade, captura do PDV online, enriquecimento por referências locais e timer/coalescing de mirror; solicita failover por callback sem assumir sua execução."
+        },
+        "offline/continuity/continuity-recovery.js": {
+            "kind": "offline-continuity",
+            "responsibility": "Owner da restauração do draft no PDV offline, detecção de venda ativa e limpeza segura do carrinho online transferido."
+        },
+        "offline/failover/connectivity-probes.js": {
+            "kind": "offline-failover",
+            "responsibility": "Owner dos probes Wix/startup/sync, preservando HEAD, timeouts, validação de tenant e fail-closed de autenticação."
+        },
+        "offline/failover/failover-controller.js": {
+            "kind": "offline-failover",
+            "responsibility": "Owner do threshold de falhas, sinais imediatos de queda e transição ONLINE->OFFLINE, incluindo sessão preservada, continuidade e estado de failover."
+        },
+        "offline/runtime/runtime-controller.js": {
+            "kind": "offline-runtime",
+            "responsibility": "Owner do timer/busy/success-count do runtime, manutenção online e recovery OFFLINE->ONLINE com threshold de três sucessos, outbox/estoque/fiscal/tenant/contador preservados."
+        },
+        "offline/runtime/ui-runtime.js": {
+            "kind": "offline-runtime",
+            "responsibility": "Owner das operações de show/hide/settle do renderer offline, mantendo a WebContentsView quente e estacionada fora da área visível."
+        },
+        "offline/runtime/shortcuts.js": {
+            "kind": "offline-runtime",
+            "responsibility": "Owner do registro e encaminhamento dos atalhos globais F4/F5 ao PDV offline, com registro único e revogação fora do modo autenticado/focado."
+        },
+        "offline/sync/reference-cache.js": {
+            "kind": "offline-sync-coordinator",
+            "responsibility": "Owner do pull completo de referências e do espelho F5, incluindo snapshot de crediário, paginação e coalescing."
+        },
+        "offline/sync/product-cache.js": {
+            "kind": "offline-sync-coordinator",
+            "responsibility": "Owner do espelho de produtos e do estado de coalescing/freshness do cache de estoque."
+        },
+        "offline/sync/outbox-coordinator.js": {
+            "kind": "offline-sync-coordinator",
+            "responsibility": "Owner da coordenação da sync_outbox geral, incluindo publicação de NFCE_AUTHORIZED e proteção contra auth failure."
+        },
+        "offline/fiscal/fiscal-runtime-coordinator.js": {
+            "kind": "offline-fiscal-coordinator",
+            "responsibility": "Owner da coordenação de contador fiscal, manutenção de lease e ciclo de reconexão/transmissão fiscal."
+        },
+        "offline/fiscal/fiscal-counter-bridge.js": {
+            "kind": "offline-fiscal-coordinator",
+            "responsibility": "Owner da ponte de contador NFC-e do frame PDV confiável, incluindo NEXT/CONSUME e resposta de erro pelo evento congelado."
+        },
+        "printing/print-queue.js": {
+            "kind": "printing",
+            "responsibility": "Owner único da fila serial de impressão; falhas de um job são registradas sem bloquear os jobs seguintes."
+        },
+        "printing/windows-driver.js": {
+            "kind": "printing",
+            "responsibility": "Owner da validação do payload, arquivo temporário e execução do print-driver-nfce.ps1 com paths resolvidos injetados pelo composition root."
+        },
+        "printing/frame-print-bridge.js": {
+            "kind": "printing",
+            "responsibility": "Owner único do listener console-message privilegiado e da ponte TOP de impressão, preservando WebFrameMain confiável, origin pinado, dedupe de 60s e consumo one-shot do payload."
+        },
+        "updater/update-controller.js": {
+            "kind": "updater-controller",
+            "responsibility": "Owner do estado de atualização obrigatória, lock/ready do helper externo, páginas de update, verificação/download e handoff para instalação."
+        },
+        "updater/standby-controller.js": {
+            "kind": "standby-controller",
+            "responsibility": "Owner do timer de manifesto standby e orquestrador de check/preparo do slot inativo via offline-standby.js."
+        },
+        "preload.js": {
+            "kind": "entrypoint",
+            "responsibility": "Bridge context-isolated entre renderer e IPC do processo principal."
+        },
+        "phase2-pair-device.js": {
+            "kind": "utility-entrypoint",
+            "responsibility": "Pareamento de device por linha de comando usando identidade e SQLite locais."
+        },
+        "offline-db.js": {
+            "kind": "persistence-facade",
+            "responsibility": "Fachada pública compatível do SQLite offline; orquestra owners internos e mantém operações de domínio ainda não extraídas."
+        },
+        "offline-db/connection.js": {
+            "kind": "persistence-connection",
+            "responsibility": "Owner único de DatabaseSync, databasePath, singleton, abertura/reuso/close/reopen e PRAGMAs do SQLite offline."
+        },
+        "offline-db/transaction.js": {
+            "kind": "persistence-transaction-context",
+            "responsibility": "Owner do contexto BEGIN IMMEDIATE/COMMIT/ROLLBACK usado pelo kernel DB e pelas migrations, preservando finalização única e rollback tolerante."
+        },
+        "offline-db/migrations/index.js": {
+            "kind": "persistence-migrations",
+            "responsibility": "Owner do manifesto de schema, validação de compatibilidade e orquestração das migrations V1-V13."
+        },
+        "offline-db/migrations/versions/index.js": {
+            "kind": "persistence-migration-versions",
+            "responsibility": "Implementações idempotentes V1-V13, preservando ordem, transações e SQL de cada evolução histórica do schema."
+        },
+        "offline-device-auth.js": {
+            "kind": "infrastructure",
+            "responsibility": "Identidade do device/empresa e armazenamento protegido de tokens de sync."
+        },
+        "offline-device-pairing.js": {
+            "kind": "infrastructure",
+            "responsibility": "Contrato de pareamento remoto do device."
+        },
+        "offline-sync-http-transport.js": {
+            "kind": "transport",
+            "responsibility": "HTTP da API e-fisco para sync, bootstrap, referências, caixa e operações autenticadas."
+        },
+        "offline-outbox-worker.js": {
+            "kind": "worker",
+            "responsibility": "Máquina de retry/claim/confirmação da outbox geral."
+        },
+        "offline-product-service.js": {
+            "kind": "application-service",
+            "responsibility": "Busca e projeção de disponibilidade de produtos para venda offline."
+        },
+        "offline-cash-service.js": {
+            "kind": "application-service",
+            "responsibility": "Casos de uso de consulta, abertura, movimento, espelhamento e fechamento de caixa."
+        },
+        "offline-sale-service.js": {
+            "kind": "application-service",
+            "responsibility": "Montagem e registro de venda/crediário offline e ponto de entrada do pipeline fiscal."
+        },
+        "offline-sale-values.js": {
+            "kind": "pure-domain",
+            "responsibility": "Conversões monetárias e de quantidade determinísticas usadas pela venda."
+        },
+        "offline-fiscal-values.js": {
+            "kind": "pure-domain",
+            "responsibility": "Valores fiscais determinísticos: dinheiro, quantidade, percentual, datas, QR e políticas de numeração."
+        },
+        "offline-fiscal-certificate-provisioning.js": {
+            "kind": "application-service",
+            "responsibility": "Busca/provisiona A1 remoto e entrega ao armazenamento local protegido."
+        },
+        "offline-fiscal-certificate-store.js": {
+            "kind": "infrastructure",
+            "responsibility": "Persistência local criptografada do bundle A1 vinculada a empresa/device."
+        },
+        "offline-fiscal-contingency-service.js": {
+            "kind": "application-service",
+            "responsibility": "Gera XML NFC-e, assina com A1 e persiste o documento assinado em contingência."
+        },
+        "offline-fiscal-nfce-xml.js": {
+            "kind": "domain-document",
+            "responsibility": "Geração determinística do XML NFC-e 4.00 sem assinatura."
+        },
+        "offline-fiscal-xml-signer.js": {
+            "kind": "crypto-infrastructure",
+            "responsibility": "Leitura de PKCS#12, XMLDSig e verificação criptográfica."
+        },
+        "offline-fiscal-nfce-qrcode.js": {
+            "kind": "domain-document",
+            "responsibility": "QR Code v3, infNFeSupl e montagem do XML final."
+        },
+        "offline-fiscal-nfce-danfe.js": {
+            "kind": "domain-document",
+            "responsibility": "Parse do XML final e modelos do DANFE de contingência."
+        },
+        "offline-fiscal-number-service.js": {
+            "kind": "application-service",
+            "responsibility": "Reserva remota de faixa fiscal e persistência do lease local."
+        },
+        "offline-fiscal-number-maintenance.js": {
+            "kind": "worker",
+            "responsibility": "Manutenção preventiva do inventário local de numeração fiscal."
+        },
+        "offline-fiscal-sale-pipeline.js": {
+            "kind": "orchestrator",
+            "responsibility": "Decide elegibilidade fiscal e encadeia venda, assinatura, QR, DANFE e criação da fiscal outbox."
+        },
+        "offline-fiscal-outbox-worker.js": {
+            "kind": "worker",
+            "responsibility": "Claim, retry, reconciliação, conflito e estados terminais da fiscal outbox."
+        },
+        "offline-fiscal-runtime.js": {
+            "kind": "orchestrator",
+            "responsibility": "Ciclo de reconexão fiscal: recuperação de SENDING e execução do worker com transporte."
+        },
+        "offline-fiscal-svrs-transport.js": {
+            "kind": "transport",
+            "responsibility": "SOAP de autorização/consulta SVRS e classificação dos retornos fiscais."
+        },
+        "offline-fiscal-trust-anchors.js": {
+            "kind": "infrastructure",
+            "responsibility": "Âncoras TLS usadas pelo transporte SVRS."
+        },
+        "offline-standby.js": {
+            "kind": "desktop-infrastructure",
+            "responsibility": "Manifesto, pacote standby, ativação e rollback de slots offline."
+        },
+        "offline-ui-server.js": {
+            "kind": "desktop-infrastructure",
+            "responsibility": "Servidor HTTP loopback estrito para a UI offline; allowlist fixa do shell/vendor e serving P01 restrito da subtree /pdv/** somente para JS/CSS same-origin, com root real/traversal/MIME/GET/HEAD fail-closed."
+        },
+        "offline-db/repositories/local-config.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner do SQL de local_config e adapter anexado à conexão para identidade device/empresa sem deep-import externo."
+        },
+        "offline-db/repositories/operator-credentials.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das leituras/escritas de offline_operator_credentials e offline_provisioned_credentials."
+        },
+        "offline-db/repositories/prepared-companies.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das leituras/escritas do registry offline_prepared_companies."
+        },
+        "offline-db/repositories/products.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das escritas e consultas de referência de products_cache expostas pela fachada offline-db.js."
+        },
+        "offline-db/repositories/customers.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das escritas e consultas de referência de customers_cache expostas pela fachada offline-db.js."
+        },
+        "offline-db/repositories/suppliers.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das escritas e consultas de referência de suppliers_cache expostas pela fachada offline-db.js."
+        },
+        "offline-db/read-models/finance.js": {
+            "kind": "persistence-read-model",
+            "responsibility": "Owner das leituras financeiras/sales D06: listFinancialMovements, getSaleById e paginação listOfflineSalesForFinance anexada à conexão sem deep-import externo."
+        },
+        "offline-db/outbox/sync-outbox.js": {
+            "kind": "persistence-outbox",
+            "responsibility": "Owner do ciclo genérico sync_outbox: enqueue/get/ready/claim/transições/recovery, preservando dependências e idempotência."
+        },
+        "offline-db/read-models/outbox-status.js": {
+            "kind": "persistence-read-model",
+            "responsibility": "Owner do resumo agregado de status da sync_outbox por empresa."
+        },
+        "offline-db/repositories/cash.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das sessões e movimentos de caixa, updates de payload e adapter transacional usado pelo application service sem SQL bruto."
+        },
+        "offline-db/repositories/finance.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das escritas idempotentes de financial_movements."
+        },
+        "offline-db/read-models/cash.js": {
+            "kind": "persistence-read-model",
+            "responsibility": "Owner das leituras/agregações de caixa e das dependências CASH_* na sync_outbox."
+        },
+        "offline-db/repositories/fiscal-profile.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner de fiscal_profile_cache: upsert e leitura do perfil fiscal preparado por empresa."
+        },
+        "offline-db/read-models/fiscal.js": {
+            "kind": "persistence-read-model",
+            "responsibility": "Owner das leituras documentais fiscais e do read-model de NFC-e autorizada pendente de sync."
+        },
+        "offline-db/outbox/fiscal-outbox.js": {
+            "kind": "persistence-outbox",
+            "responsibility": "Owner do ciclo fiscal_outbox e das transições atômicas correspondentes em nfce_documents, separado da sync_outbox geral."
+        },
+        "offline-db/repositories/stock.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner das conversões de quantidade, movimentos, projeção e deltas pendentes de estoque; operações atômicas de crediário/venda continuam nos lotes D12/D13."
+        },
+        "offline-db/repositories/fiscal-numbering.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner dos leases fiscais NFC-e, inventário, seleção de faixa, peek/consume e reconciliação monotônica do contador local."
+        },
+        "offline-db/repositories/crediario.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner do cache base de crediário: upsert/finalização de snapshot, lookup singular e mapper persistente."
+        },
+        "offline-db/read-models/crediario.js": {
+            "kind": "persistence-read-model",
+            "responsibility": "Owner das listas/detalhes de crediário e dependências CREDIARIO_* na sync_outbox."
+        },
+        "offline-db/atomic/crediario.js": {
+            "kind": "persistence-atomic",
+            "responsibility": "Owner das transações atômicas openCrediarioOfflineAtomic e updateCrediarioItemsOfflineAtomic, incluindo cache, estoque e sync_outbox."
+        },
+        "offline-db/repositories/sales.js": {
+            "kind": "persistence-repository",
+            "responsibility": "Owner da reconciliação write-side do status local de vendas após confirmação da sync_outbox."
+        },
+        "offline-db/atomic/sale.js": {
+            "kind": "persistence-atomic",
+            "responsibility": "Owner de registerOfflineSaleAtomic e da transação cross-domain de venda, itens, estoque, caixa, financeiro, crediário, alocação NFC-e/contador e sync_outbox."
+        },
+        "offline-ui/pdv/contracts/messages.js": {
+            "kind": "renderer-contract",
+            "responsibility": "Manifesto compatível dos 265 nomes SCF_* observados no PDV, incluindo o subconjunto 44 compartilhado com o shell e o shell-only conhecido."
+        },
+        "offline-ui/pdv/contracts/events.js": {
+            "kind": "renderer-contract",
+            "responsibility": "Manifesto dos 33 eventos internos scf:* observados no PDV; preserva nomes enquanto consumidores legados existirem."
+        },
+        "offline-ui/pdv/contracts/storage-keys.js": {
+            "kind": "renderer-contract",
+            "responsibility": "Owner declarativo das chaves/prefixos/separadores/TTL/backends/shapes de Storage extraídos em P02; não implementa persistência (P03)."
+        },
+        "offline-ui/pdv/infra/shell-bridge.js": {
+            "kind": "renderer-infra",
+            "responsibility": "Adapter da fronteira window.parent/postMessage e subscriptions message do documento PDV principal; preserva payload e targetOrigin. O srcdoc interno continua com bridge nativa própria."
+        },
+        "offline-ui/pdv/infra/event-bus.js": {
+            "kind": "renderer-infra",
+            "responsibility": "Adapter de eventos internos document-level; preserva Event/CustomEvent/detail e opções de listener sem assumir ownership de estado."
+        },
+        "offline-ui/pdv/infra/storage.js": {
+            "kind": "renderer-infra",
+            "responsibility": "Adapter fino de localStorage/sessionStorage. Não altera chaves, JSON shape, TTL ou política de persistência definida em contracts/storage-keys.js."
+        },
+        "offline-ui/pdv/infra/dom.js": {
+            "kind": "renderer-infra",
+            "responsibility": "Adapter fino de lookup/query DOM no document ou root explicitamente fornecido; DOM continua projeção de UI, não fonte canônica de estado."
+        },
+        "offline-ui/pdv/infra/browser-network.js": {
+            "kind": "renderer-infra",
+            "responsibility": "Adapter das duas exceções de rede do renderer: probe de conectividade no-cors e download JSON oficial de NCM, com timeout/AbortController e sem Node/Electron."
+        },
+        "offline-ui/pdv/state/session-state.js": {
+            "kind": "renderer-state",
+            "responsibility": "Owner canônico de perfil de sessão e restrição de acesso PDV; fornece snapshot e setters/getters sem persistência nova."
+        },
+        "offline-ui/pdv/state/runtime-state.js": {
+            "kind": "renderer-state",
+            "responsibility": "Owner canônico do estado transversal de conectividade/ready do PDV; sem rede direta e sem regra de domínio."
+        },
+        "offline-ui/pdv/state/navigation-state.js": {
+            "kind": "renderer-state",
+            "responsibility": "Owner canônico do modo transversal de consulta/navegação extraído em P04; estados específicos dos domínios permanecem para P06-P18."
+        },
+        "offline-ui/pdv/compat/legacy-globals.js": {
+            "kind": "renderer-compat",
+            "responsibility": "Compat P04 reduzido em 10.3 aos três accessors ainda consumidos (__scfPerfilSessao, __scfAcessoSomentePdv e __scfSistemaOnlineAtual), sem armazenamento próprio."
+        },
+        "offline-ui/pdv/bootstrap.js": {
+            "kind": "renderer-bootstrap",
+            "responsibility": "Composition root P04 carregado antes dos consumidores inline; valida contracts/infra/state/shared/compat e instala somente os bindings legados ainda consumidos. O agregado debug __scfPdvApp foi removido em 10.3 por não possuir consumidor de produção."
+        },
+        "offline-ui/pdv/shared/values/ui-values.js": {
+            "kind": "renderer-shared-values",
+            "responsibility": "Valores imutáveis compartilhados de ambiente fiscal e conectividade usados pelos componentes P05."
+        },
+        "offline-ui/pdv/shared/helpers/text-format.js": {
+            "kind": "renderer-shared-helper",
+            "responsibility": "Helpers puros de texto/dígitos/CNPJ/ambiente/perfil; sem DOM, Storage, rede ou regra de domínio."
+        },
+        "offline-ui/pdv/ui/components/company-header.js": {
+            "kind": "renderer-ui-component",
+            "responsibility": "Componente do cabeçalho de empresa; preserva SCF_EMPRESA_CABECALHO_* e usa shared helpers + infra DOM/shell bridge."
+        },
+        "offline-ui/pdv/ui/components/connectivity-indicator.js": {
+            "kind": "renderer-ui-component",
+            "responsibility": "Componente visual de conectividade; usa runtime-state + browser-network e preserva probe/timers/labels do fluxo existente."
+        },
+        "offline-ui/pdv/ui/navigation/access-guard.js": {
+            "kind": "renderer-ui-navigation",
+            "responsibility": "Guarda visual/navegação por perfil; usa session-state como fonte canônica e mantém a sincronização compatível com o iframe filho."
+        },
+        "offline-ui/pdv/domains/products/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P06 de products/NCM: cache fiscal de produto, preview compartilhado, estado/timers NCM, catálogo aprendido/local e consulta oficial via browser-network. Adapters globais mortos do cache fiscal foram removidos em 10.3; compatibilidade de preview permanece somente onde ainda há consumidor."
+        },
+        "offline-ui/pdv/domains/products/search.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P06 da consulta F4 de produtos extraído integralmente do pdv.html no mesmo ponto físico; usa products domain, navigation-state, shellBridge/eventBus e preserva SCF_*/scf:* e timers observados."
+        },
+        "offline-ui/pdv/domains/customer/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P07 do estado de customer. editingId mantém __scfClienteEdicaoId porque o monólito ainda o consome; a coleção customers é acessada somente pelo owner e __scfClientesCadastroCache foi removido em 10.3."
+        },
+        "offline-ui/pdv/domains/customer/create-update.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P07 de cadastro/atualização de cliente; preserva SCF_CLIENTE_CADASTRAR, retorno de sucesso/erro, requestId, validação e timing observados."
+        },
+        "offline-ui/pdv/domains/customer/list.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P07 de listagem/pesquisa de clientes; usa o cache canônico do customer domain e preserva SCF_CLIENTES_LISTAR/LISTA_RESULTADO/LISTA_ERRO e scf:cadastrar-opcao."
+        },
+        "offline-ui/pdv/domains/customer/edit.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P07 de seleção/edição de cliente; consome diretamente editingId/customers do owner P07 sem manter segundo cache global."
+        },
+        "offline-ui/pdv/domains/customer/delete.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P07 de excluir/atualizar cliente; preserva SCF_CLIENTE_EXCLUIR/EXCLUIDO/EXCLUSAO_ERRO e sincroniza o cache pelo owner P07."
+        },
+        "offline-ui/pdv/domains/suppliers/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P08 do estado de suppliers. editingId mantém __scfFornecedorEdicaoId porque ainda existe consumidor no monólito; a coleção suppliers é owner-only após remoção de __scfFornecedoresCadastroCache em 10.3."
+        },
+        "offline-ui/pdv/domains/suppliers/registration-ui.js": {
+            "kind": "renderer-domain-coordinator-ui",
+            "responsibility": "UI compartilhada CLIENTE/FORNECEDOR externalizada em P08 no mesmo ponto físico; preserva abertura/fechamento, menu, eventos e timers sem assumir estado de customer/supplier."
+        },
+        "offline-ui/pdv/domains/suppliers/crud.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P08 do CRUD/listagem de fornecedor; consome suppliers owner e customer owner, preserva SCF_FORNECEDOR*/SCF_FORNECEDORES*, requestIds e timings observados."
+        },
+        "offline-ui/pdv/domains/suppliers/coordinator.js": {
+            "kind": "renderer-domain-coordinator",
+            "responsibility": "Coordenador final P08 das transições CLIENTE/FORNECEDOR; usa diretamente customer/suppliers owners e preserva scf:cadastrar-opcao, menu e reaplicações temporizadas."
+        },
+        "offline-ui/pdv/domains/history/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P09 do estado cross-script do Histórico: frame e saleId pendente do comprovante inline; mantém __scfHistoryInlineReceiptFrame e __scfHistoryInlineReceiptPendingSaleId somente como accessors de compatibilidade."
+        },
+        "offline-ui/pdv/domains/history/core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller central P09 de Histórico de Vendas: paginação/cache visual, seleção ano/mês, renderização e contratos SCF_HISTORICO_VENDAS_*, exportação contábil e solicitação de comprovante."
+        },
+        "offline-ui/pdv/domains/history/title.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Sincroniza título do Histórico com mês/retorno mantendo o timing original."
+        },
+        "offline-ui/pdv/domains/history/compact-card.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Adapta cards do Histórico ao layout compacto original."
+        },
+        "offline-ui/pdv/domains/history/compact-card-fix.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Correção incremental do card compacto do Histórico preservada no mesmo ponto físico."
+        },
+        "offline-ui/pdv/domains/history/inline-receipt.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P09 de comprovante inline no Histórico; usa o owner history para frame/pendingSaleId e preserva SCF_NFCE_SOLICITAR_COMPROVANTE e respostas autorizada/erro."
+        },
+        "offline-ui/pdv/domains/history/aligned-card.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Alinhamento de cards do Histórico preservado como view local."
+        },
+        "offline-ui/pdv/domains/history/table-layout.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Transformação tabular do detalhe mensal do Histórico."
+        },
+        "offline-ui/pdv/domains/history/second-copy-click.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Interação de segunda via dentro do Histórico delegando à API canônica do comprovante inline."
+        },
+        "offline-ui/pdv/domains/history/receipt-close-menu.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Restaura a seleção de menu do Histórico após fechar o comprovante inline."
+        },
+        "offline-ui/pdv/domains/history/calendar.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Calendário/filtro por data do detalhe mensal do Histórico."
+        },
+        "offline-ui/pdv/domains/history/embedded-view.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Posiciona o Histórico no card principal no layout desktop."
+        },
+        "offline-ui/pdv/domains/history/calendar-photo.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Coordena o calendário do Histórico com a área de foto no desktop."
+        },
+        "offline-ui/pdv/domains/history/second-copy-state.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Mantém estado visual SIM/2ª VIA no Histórico sem criar transporte paralelo."
+        },
+        "offline-ui/pdv/domains/history/close-restore-dock.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Restaura dock/menu ao fechar o Histórico no fluxo legado."
+        },
+        "offline-ui/pdv/domains/history/close-document-reset.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Reseta estado visual do documento/segunda via quando o Histórico é fechado."
+        },
+        "offline-ui/pdv/domains/history/monthly-dashboard.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Dashboard mensal do Histórico no card direito, derivado apenas das linhas já renderizadas."
+        },
+        "offline-ui/pdv/domains/history/filters.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Filtros de pagamento/situação do detalhe mensal do Histórico."
+        },
+        "offline-ui/pdv/domains/history/annual-dashboard.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Dashboard anual do Histórico alimentado pelos eventos internos existentes."
+        },
+        "offline-ui/pdv/domains/history/reset-month-on-exit.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Restaura a visão de pastas antes de sair do Histórico, preservando mensagens/timing do menu."
+        },
+        "offline-ui/pdv/domains/inventory/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P10 da coleção canônica de produtos do estoque, normalização e métricas derivadas de valor/margem/saúde; controllers e dashboards consomem este owner."
+        },
+        "offline-ui/pdv/domains/inventory/core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller central P10 de estoque: lista/cache visual, ordenação, cadastro/edição/exclusão, GTIN, importação XML, abertura/fechamento e contratos SCF_ESTOQUE_*."
+        },
+        "offline-ui/pdv/domains/inventory/decor.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Inicialização segura dos encaixes decorativos do estoque."
+        },
+        "offline-ui/pdv/domains/inventory/dashboard-decision.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Dashboard decisório do estoque consumindo diretamente a coleção canônica do inventory owner."
+        },
+        "offline-ui/pdv/domains/inventory/dashboard-v3.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Iteração visual V3 do dashboard de estoque preservada no timing original."
+        },
+        "offline-ui/pdv/domains/inventory/dashboard-v4.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Iteração visual V4 do dashboard de estoque preservada no timing original."
+        },
+        "offline-ui/pdv/domains/inventory/dashboard-v5.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Iteração visual V5 do dashboard de estoque preservada no timing original."
+        },
+        "offline-ui/pdv/domains/inventory/dashboard-cleanup.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Limpeza da seção TOP 3/reposição do dashboard de estoque conforme layout final."
+        },
+        "offline-ui/pdv/domains/inventory/right-panel.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Redução do painel direito do estoque para hero/donut no layout final."
+        },
+        "offline-ui/pdv/domains/inventory/annual-sales-dashboard.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Dashboard anual copiado para o estoque; usa métricas do inventory owner e contratos Storage existentes para histórico fiscal/markup."
+        },
+        "offline-ui/pdv/domains/inventory/keyboard-navigation.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Navegação por teclado da grade de estoque e ações atuais preservando SCF_STOCK_KEYBOARD_FROM_MENU."
+        },
+        "offline-ui/pdv/domains/finance/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P11 do estado compartilhado do Financeiro: fotografia do caixa, movimentos locais, filtro de saída, pendências, reload e bridge de calendário. Os sete adapters/globals P11 sem consumidores foram removidos em 10.3; consumidores usam financeDomain diretamente."
+        },
+        "offline-ui/pdv/domains/finance/core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller central P11 do Financeiro: saldo, entradas/saídas, extrato mensal, contas a pagar/receber, cache visual e abertura/fechamento preservando SCF_FINANCEIRO_*."
+        },
+        "offline-ui/pdv/domains/finance/decor-grid.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Encaixes decorativos do grid Financeiro preservados no timing original."
+        },
+        "offline-ui/pdv/domains/finance/summary.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Resumo direto do Financeiro com consulta SCF_FINANCEIRO_RESUMO_DADOS_*."
+        },
+        "offline-ui/pdv/domains/finance/exit-calendar.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Calendário/filtro por data da página SAÍDA consumindo o filtro canônico do finance owner."
+        },
+        "offline-ui/pdv/domains/finance/exit-form.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Formulário de nova/edição/exclusão de SAÍDA, integração com supplier owner e cache local canônico de movimentos."
+        },
+        "offline-ui/pdv/domains/finance/payable-status-reload.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Reload idempotente de situação de conta a pagar usando flag do finance owner."
+        },
+        "offline-ui/pdv/domains/finance/entry-calendar-form.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Calendário/formulário direito de ENTRADA; lê snapshot financeiro canônico e mantém bridge de sessão do caixa para P12."
+        },
+        "offline-ui/pdv/domains/finance/entry-cash-sync.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Sincronização visual da entrada com a fotografia real do caixa."
+        },
+        "offline-ui/pdv/domains/finance/entry-label.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Correção do rótulo de recebimento da página ENTRADA."
+        },
+        "offline-ui/pdv/domains/finance/receivable-status.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Retorno de atualização de situação de conta a receber usando mapa de pendências do finance owner."
+        },
+        "offline-ui/pdv/domains/finance/calendar-toggle.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Toggle do calendário de movimentações financeiras."
+        },
+        "offline-ui/pdv/domains/finance/entry-month-calendar.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Calendário copiado para o mês atual do Financeiro consumindo bridge de datas/filtro do finance owner."
+        },
+        "offline-ui/pdv/domains/cash/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P12 da sessão corrente de caixa, closer canônico e guard de retorno. Mantém apenas __scfGetCaixaAtual e scfFecharComprovanteCaixa por possuírem consumidores; a flag global de retorno foi removida em 10.3."
+        },
+        "offline-ui/pdv/domains/cash/core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller central P12 de caixa: abertura/consulta, movimentação, sangria/suprimento, fechamento, resumo, atalhos e fornecedores, preservando SCF_CAIXA_*."
+        },
+        "offline-ui/pdv/domains/cash/receipt.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Comprovante interno de caixa e impressão local; registra o closer no cash owner e reutiliza o finance owner para movimentos confirmados. Como receipt.js é carregado antes de finance/domain.js por timing histórico, o finance owner é resolvido de forma lazy apenas no evento que o consome."
+        },
+        "offline-ui/pdv/domains/cash/closing-term-back.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Garante F7 | VOLTAR no termo de fechamento do caixa."
+        },
+        "offline-ui/pdv/domains/cash/back-label.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Garante o rótulo/acessibilidade do atalho VOLTAR do caixa."
+        },
+        "offline-ui/pdv/domains/cash/return-to-pdv.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Reafirma ABRIR CAIXA ao retornar ao PDV a partir de VENDAS/ESTOQUE/CADASTRO, com guard canônico no cash owner."
+        },
+        "offline-ui/pdv/domains/cash/receipt-close-on-leave.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Fecha o comprovante de caixa ao abandonar o PDV, reutilizando a rotina canônica do recibo."
+        },
+        "offline-ui/pdv/domains/crediario/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P13 dos flags compartilhados do crediário: espera F1, formas de pagamento, seleção parcial, bloqueio do menu e guards de inicialização; globals legados ficam apenas como accessors."
+        },
+        "offline-ui/pdv/domains/crediario/offline-confirm-visibility.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Garante visibilidade do CONFIRMAR no novo crediário offline preservando scf:crediario-venda-pronta."
+        },
+        "offline-ui/pdv/domains/crediario/core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller central P13 do F5 crediário: clientes, lista/cache visual, abertura/reuso, detalhe, edição, pagamento parcial e cancelamento; preserva SCF_CREDIARIO_* e reutiliza customer owner."
+        },
+        "offline-ui/pdv/domains/crediario/focus-protection.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Proteção de foco P13 baseada em scf-crediario-open e no owner crediario; o marcador global sem leitor __scfCrediarioMantemFoco foi removido em 10.3."
+        },
+        "offline-ui/pdv/domains/crediario/back.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Fluxo F6/F7 voltar do crediário consumindo flags do owner e preservando limpeza/retorno."
+        },
+        "offline-ui/pdv/domains/crediario/side-menu-lock.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Bloqueio coordenado do menu lateral durante a lista operacional do crediário, com estado canônico no owner."
+        },
+        "offline-ui/pdv/domains/crediario/shortcut-legend.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Legenda F0/F5 do crediário preservada."
+        },
+        "offline-ui/pdv/domains/crediario/list-inputs-lock.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Desabilita os controles operacionais do card direito enquanto a lista F5 está aberta."
+        },
+        "offline-ui/pdv/domains/crediario/return-to-pdv.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Coordena saída da lista F5 por menu e retorno ao PDV normal usando guard do owner."
+        },
+        "offline-ui/pdv/domains/crediario/detail-pdv-close.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Fecha lista/detalhe do crediário ao comando PDV e restaura o estado normal sem alterar backend."
+        },
+        "offline-ui/pdv/domains/crediario/list-top-back.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Seta de retorno da lista do crediário; preserva SCF_CREDIARIO_LISTA_TOPO_VOLTAR e SCF_FISCAL_HOME_ABRIR."
+        },
+        "offline-ui/pdv/domains/crediario/list-keyboard.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Navegação por teclado da lista F5 com seleção por crediarioId e ENTER=PAGAR."
+        },
+        "offline-ui/pdv/domains/sale-payment/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P14 do estado de venda/pagamento: modo venda interna, saleId de recibo pendente, janela mínima e guards. Os três accessors globais P14 sem consumidor foram removidos em 10.3; consumidores usam salePaymentDomain."
+        },
+        "offline-ui/pdv/domains/sale-payment/sale-core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Core P14 da venda normal: carrinho/produtos, teclado, totais, finalização e adapters de draft; preserva hooks de continuidade para o corte P15 e chamadas fiscais para o corte P16."
+        },
+        "offline-ui/pdv/domains/sale-payment/payment-core.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Core P14 de finalização/pagamento: formas, parcelas, dinheiro/troco, identificação, venda paga e coordenação dos resultados; consome o owner sale/payment e preserva contratos fiscais para P16."
+        },
+        "offline-ui/pdv/domains/sale-payment/finalize-standby.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Standby lateral da finalização de venda no timing original."
+        },
+        "offline-ui/pdv/domains/sale-payment/finalize-menu.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Coordena menu/foco enquanto FINALIZAR VENDA está em standby, preservando transições de página existentes."
+        },
+        "offline-ui/pdv/domains/sale-payment/finalize-back.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Atalho F6/F7 voltar/remover etapa durante finalização e pagamento."
+        },
+        "offline-ui/pdv/domains/sale-payment/identification-back.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Volta da identificação CPF/CNPJ para o resumo da finalização."
+        },
+        "offline-ui/pdv/domains/sale-payment/identification-person-nav.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Navegação por teclado PF/PJ na identificação da venda."
+        },
+        "offline-ui/pdv/domains/sale-payment/identification-fields-nav.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Navegação entre documento e WhatsApp na identificação da venda."
+        },
+        "offline-ui/pdv/domains/sale-payment/identification-autofocus.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Autofoco do documento na etapa de identificação."
+        },
+        "offline-ui/pdv/domains/sale-payment/identification-optional.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Preserva seleção PF/PJ quando identificação opcional é aberta."
+        },
+        "offline-ui/pdv/domains/sale-payment/auto-payment.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Pagamento total automático/F7 apenas no fluxo dividido, reutilizando adapters canônicos do payment core."
+        },
+        "offline-ui/pdv/domains/sale-payment/normal-sale-f11-lock.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Bloqueio de movimentação F11 enquanto a venda normal possui produto ativo."
+        },
+        "offline-ui/pdv/domains/sale-payment/internal-sale-toggle.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Toggle F6 de VENDA INTERNA com estado e guard canônicos no sale/payment owner."
+        },
+        "offline-ui/pdv/domains/continuity/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P15 do contrato de continuidade no renderer. Orquestra export/restore/active-sale por ports registrados pelos owners sale/payment, sem possuir o draft espelhado do main process."
+        },
+        "offline-ui/pdv/domains/continuity/core.js": {
+            "kind": "renderer-domain-adapter",
+            "responsibility": "Adapters legados __scfPdvExportContinuityDraft, __scfPdvRestoreContinuityDraft e __scfPdvHasActiveContinuitySale delegando exclusivamente ao owner continuity."
+        },
+        "offline-ui/pdv/domains/fiscal/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P16 do estado do receipt fiscal: comprovante atual/histórico, segunda via, QR, WhatsApp e closer. O QR é owner-only após remoção de __scfNfceQrUrlAtual em 10.3."
+        },
+        "offline-ui/pdv/domains/fiscal/receipt.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller P16 de DANFE/NFC-e e venda interna: renderização, QR, WhatsApp, abertura/fechamento e integração com history/sale-payment owners; mantém apenas compatibilidade de impressão que será cortada em P18."
+        },
+        "offline-ui/pdv/domains/fiscal/completed-footer.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Rodapé CUPOM FISCAL da venda concluída, preservando ENTER/click e timers."
+        },
+        "offline-ui/pdv/domains/fiscal/processing-footer.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Rodapé PROCESSANDO/FECHAR da NFC-e; consome diretamente o closer do fiscal owner e preserva bloqueios/temporização."
+        },
+        "offline-ui/pdv/domains/superadmin/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P17 do modo SUPERADMIN e registry canônico de actions compartilhadas. Em 10.3 os sete accessors globais __scfSuperAdmin* foram removidos por não possuírem consumidores; controllers/views usam superadminDomain.actions diretamente."
+        },
+        "offline-ui/pdv/domains/superadmin/customer-shell.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Reutiliza o cadastro original de cliente como shell SUPERADMIN, consumindo active do owner e preservando READY/WIX_READY e eventos de abertura."
+        },
+        "offline-ui/pdv/domains/superadmin/company-form.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Cadastro de empresa, consulta CNPJ/CEP, validação e envio; coordena sucesso/limpeza via actions do owner."
+        },
+        "offline-ui/pdv/domains/superadmin/fiscal-certificate-selector.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Seletor visual DADOS FISCAIS/CERTIFICADO no formulário SUPERADMIN."
+        },
+        "offline-ui/pdv/domains/superadmin/contact-fields.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Campos laterais de contato do cadastro SUPERADMIN."
+        },
+        "offline-ui/pdv/domains/superadmin/company-fiscal-tabs.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Alternância DADOS EMPRESA/DADOS FISCAIS preservando o layout e navegação do formulário."
+        },
+        "offline-ui/pdv/domains/superadmin/certificate-a1.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Fluxo A1 P17: seleção/leitura PFX/P12, senha, limite 5MB, envio e resultado SCF_SUPERADMIN_CERTIFICADO_A1_*."
+        },
+        "offline-ui/pdv/domains/superadmin/companies-panel.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Lista/painel de empresas e validade de certificado, consumindo active/actions do owner."
+        },
+        "offline-ui/pdv/domains/superadmin/company-edit.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Edição/atualização de empresa e integração opcional com A1, usando actions compartilhadas do owner."
+        },
+        "offline-ui/pdv/domains/superadmin/primary-action.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Encaixe da ação principal CADASTRAR/LIMPAR no painel SUPERADMIN."
+        },
+        "offline-ui/pdv/domains/superadmin/form-state.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Máquina visual FECHADO/NOVO/EDICAO e snapshot de alterações do formulário SUPERADMIN."
+        },
+        "offline-ui/pdv/domains/superadmin/company-details.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Detalhes da empresa selecionada e título do painel, registrados no owner."
+        },
+        "offline-ui/pdv/domains/superadmin/details-cleanup.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Normalização visual de título/seta após detalhes da empresa."
+        },
+        "offline-ui/pdv/domains/superadmin/residual-arrow-cleanup.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "Remoção defensiva residual da seta do painel SUPERADMIN."
+        },
+        "offline-ui/pdv/domains/printing/domain.js": {
+            "kind": "renderer-domain-owner",
+            "responsibility": "Owner P18 dos executores de impressão e do estado efêmero necessário no renderer. Em 10.3 foram removidos delegates/config globals sem consumidor; somente __scfElectronPendingPrintPayload permanece como accessor cross-process requerido por printing/frame-print-bridge.js."
+        },
+        "offline-ui/pdv/domains/printing/frame-controller.js": {
+            "kind": "renderer-domain-controller",
+            "responsibility": "Controller final P18 do canal V5 de impressão NFC-e: payload one-shot para o frame bridge, recibo nativo/fallback de imagem, duas vias de contingência, dedupe e hook de reimpressão do histórico; registra os executores no printing owner."
+        },
+        "offline-ui/pdv/domains/printing/history-receipt-view.js": {
+            "kind": "renderer-domain-view",
+            "responsibility": "View P18 que mantém o DANFE histórico exclusivo no card direito durante reenvio/impressão, preservando evento de fechamento e temporização visual."
+        },
+        "desktop/windows/offline-diagnostic-view.js": {
+            "kind": "desktop-window-diagnostics",
+            "responsibility": "View local isolada para exibir diagnóstico OFFLINE quando o renderer principal falha, sem preload, Node ou dependência de rede."
+        },
+        "desktop/windows/offline-renderer-health.js": {
+            "kind": "desktop-window-health",
+            "responsibility": "Owner do estado temporal de saúde do renderer OFFLINE, incluindo freshness, troca de view e invalidação."
+        },
+        "desktop/windows/offline-renderer-recovery.js": {
+            "kind": "desktop-window-recovery",
+            "responsibility": "Owner da política limitada de reconstrução do renderer OFFLINE, com orçamento, retry e cancelamento."
+        },
+        "offline/diagnostics/prerequisites.js": {
+            "kind": "offline-diagnostics",
+            "responsibility": "Coleta o estado de banco, empresa, safeStorage, credencial, servidor loopback e renderer em um diagnóstico único e seguro."
+        },
+        "offline/diagnostics/codes.js": {
+            "kind": "offline-diagnostics-catalog",
+            "responsibility": "Catálogo versionado e estável de códigos de diagnóstico OFFLINE, com categoria, severidade, mensagem e resolvers para pré-requisitos e falhas do renderer."
+        },
+        "offline/diagnostics/self-test.js": {
+            "kind": "offline-diagnostics-self-test",
+            "responsibility": "Executa o auto-teste OFFLINE sob demanda, serializa relatório sanitizado, coordena probe do renderer e evita execuções concorrentes."
+        },
+        "offline/diagnostics/auto-repair.js": {
+            "kind": "offline-diagnostics-auto-repair",
+            "responsibility": "Orquestra auto-reparos OFFLINE seguros e limitados por código, com duas passagens, coalescência, revalidação e classificação explícita das causas sem reparo automático."
+        },
+        "offline/diagnostics/report.js": {
+            "kind": "offline-diagnostics-report",
+            "responsibility": "Owner do relatório técnico OFFLINE sanitizado e persistente, com snapshot de runtime/checks, último auto-teste/reparo e histórico limitado de eventos de suporte."
+        },
+        "offline/telemetry/payload.js": {
+            "kind": "offline-telemetry-payload",
+            "responsibility": "Constrói payload de telemetria OFFLINE sanitizado com refs pseudonimizadas, eventId, dedupeKey, hash de integridade e budget de bytes/histórico; não persiste fila e não envia rede."
+        },
+        "offline/telemetry/queue.js": {
+            "kind": "offline-telemetry-queue",
+            "responsibility": "Fila persistente local de telemetria OFFLINE com validação de integridade, coalescência por dedupeKey, retenção, budgets de itens/bytes, quarentena de corrupção e operações futuras de tentativa/ACK."
+        },
+        "offline/telemetry/sender.js": {
+            "kind": "offline-telemetry-sender",
+            "responsibility": "Drena a fila local de telemetria via transporte autenticado do device, em batches limitados, com ACK explícito por eventId, backoff exponencial com jitter, preservação em falha e coalescência de flush concorrente."
+        },
+        "offline/diagnostics/presentation.js": {
+            "kind": "offline-diagnostics-presentation",
+            "responsibility": "Transforma readiness/falhas de failover em diagn?stico visual sanitizado e decide quando a tela diagn?stica pode substituir uma janela branca, inclusive em modo ONLINE por fail-safe expl?cito."
+        }
     }
-  ],
-  "directDependencies": {
-    "main.js": [
-      "offline-cash-service.js",
-      "offline-db.js",
-      "offline-device-auth.js",
-      "offline-device-pairing.js",
-      "offline-fiscal-certificate-provisioning.js",
-      "offline-fiscal-nfce-danfe.js",
-      "offline-fiscal-runtime.js",
-      "offline-outbox-worker.js",
-      "offline-product-service.js",
-      "offline-sale-service.js",
-      "offline-standby.js",
-      "offline-sync-http-transport.js",
-      "offline-ui-server.js"
-    ],
-    "offline-cash-service.js": [
-      "offline-db.js",
-      "offline-device-auth.js"
-    ],
-    "offline-fiscal-certificate-provisioning.js": [
-      "offline-fiscal-certificate-store.js",
-      "offline-sync-http-transport.js"
-    ],
-    "offline-fiscal-contingency-service.js": [
-      "offline-db.js",
-      "offline-fiscal-nfce-xml.js",
-      "offline-fiscal-xml-signer.js"
-    ],
-    "offline-fiscal-nfce-danfe.js": [
-      "offline-db.js",
-      "offline-fiscal-nfce-qrcode.js"
-    ],
-    "offline-fiscal-nfce-qrcode.js": [
-      "offline-db.js",
-      "offline-fiscal-certificate-store.js",
-      "offline-fiscal-values.js",
-      "offline-fiscal-xml-signer.js"
-    ],
-    "offline-fiscal-nfce-xml.js": [
-      "offline-fiscal-values.js"
-    ],
-    "offline-fiscal-number-maintenance.js": [
-      "offline-db.js",
-      "offline-fiscal-number-service.js",
-      "offline-fiscal-values.js"
-    ],
-    "offline-fiscal-number-service.js": [
-      "offline-db.js",
-      "offline-sync-http-transport.js"
-    ],
-    "offline-fiscal-outbox-worker.js": [
-      "offline-db.js",
-      "offline-fiscal-nfce-qrcode.js"
-    ],
-    "offline-fiscal-runtime.js": [
-      "offline-fiscal-outbox-worker.js",
-      "offline-fiscal-svrs-transport.js"
-    ],
-    "offline-fiscal-sale-pipeline.js": [
-      "offline-db.js",
-      "offline-fiscal-certificate-store.js",
-      "offline-fiscal-contingency-service.js",
-      "offline-fiscal-nfce-danfe.js",
-      "offline-fiscal-nfce-qrcode.js"
-    ],
-    "offline-fiscal-svrs-transport.js": [
-      "offline-fiscal-certificate-store.js",
-      "offline-fiscal-trust-anchors.js"
-    ],
-    "offline-fiscal-xml-signer.js": [
-      "offline-fiscal-certificate-store.js"
-    ],
-    "offline-outbox-worker.js": [
-      "offline-db.js"
-    ],
-    "offline-product-service.js": [
-      "offline-db.js",
-      "offline-device-auth.js"
-    ],
-    "offline-sale-service.js": [
-      "offline-db.js",
-      "offline-device-auth.js",
-      "offline-fiscal-sale-pipeline.js",
-      "offline-sale-values.js"
-    ],
-    "phase2-pair-device.js": [
-      "offline-db.js",
-      "offline-device-auth.js",
-      "offline-device-pairing.js"
-    ]
-  },
-  "modules": {
-    "main.js": {
-      "kind": "entrypoint",
-      "responsibility": "Orquestrador principal Electron: lifecycle, janelas, IPC, failover online/offline, timers, sync, fiscal, impressão e updater."
-    },
-    "preload.js": {
-      "kind": "entrypoint",
-      "responsibility": "Bridge context-isolated entre renderer e IPC do processo principal."
-    },
-    "phase2-pair-device.js": {
-      "kind": "utility-entrypoint",
-      "responsibility": "Pareamento de device por linha de comando usando identidade e SQLite locais."
-    },
-    "offline-db.js": {
-      "kind": "persistence-kernel",
-      "responsibility": "Único módulo proprietário do SQLite offline e das transações locais."
-    },
-    "offline-device-auth.js": {
-      "kind": "infrastructure",
-      "responsibility": "Identidade do device/empresa e armazenamento protegido de tokens de sync."
-    },
-    "offline-device-pairing.js": {
-      "kind": "infrastructure",
-      "responsibility": "Contrato de pareamento remoto do device."
-    },
-    "offline-sync-http-transport.js": {
-      "kind": "transport",
-      "responsibility": "HTTP da API e-fisco para sync, bootstrap, referências, caixa e operações autenticadas."
-    },
-    "offline-outbox-worker.js": {
-      "kind": "worker",
-      "responsibility": "Máquina de retry/claim/confirmação da outbox geral."
-    },
-    "offline-product-service.js": {
-      "kind": "application-service",
-      "responsibility": "Busca e projeção de disponibilidade de produtos para venda offline."
-    },
-    "offline-cash-service.js": {
-      "kind": "application-service",
-      "responsibility": "Casos de uso de consulta, abertura, movimento, espelhamento e fechamento de caixa."
-    },
-    "offline-sale-service.js": {
-      "kind": "application-service",
-      "responsibility": "Montagem e registro de venda/crediário offline e ponto de entrada do pipeline fiscal."
-    },
-    "offline-sale-values.js": {
-      "kind": "pure-domain",
-      "responsibility": "Conversões monetárias e de quantidade determinísticas usadas pela venda."
-    },
-    "offline-fiscal-values.js": {
-      "kind": "pure-domain",
-      "responsibility": "Valores fiscais determinísticos: dinheiro, quantidade, percentual, datas, QR e políticas de numeração."
-    },
-    "offline-fiscal-certificate-provisioning.js": {
-      "kind": "application-service",
-      "responsibility": "Busca/provisiona A1 remoto e entrega ao armazenamento local protegido."
-    },
-    "offline-fiscal-certificate-store.js": {
-      "kind": "infrastructure",
-      "responsibility": "Persistência local criptografada do bundle A1 vinculada a empresa/device."
-    },
-    "offline-fiscal-contingency-service.js": {
-      "kind": "application-service",
-      "responsibility": "Gera XML NFC-e, assina com A1 e persiste o documento assinado em contingência."
-    },
-    "offline-fiscal-nfce-xml.js": {
-      "kind": "domain-document",
-      "responsibility": "Geração determinística do XML NFC-e 4.00 sem assinatura."
-    },
-    "offline-fiscal-xml-signer.js": {
-      "kind": "crypto-infrastructure",
-      "responsibility": "Leitura de PKCS#12, XMLDSig e verificação criptográfica."
-    },
-    "offline-fiscal-nfce-qrcode.js": {
-      "kind": "domain-document",
-      "responsibility": "QR Code v3, infNFeSupl e montagem do XML final."
-    },
-    "offline-fiscal-nfce-danfe.js": {
-      "kind": "domain-document",
-      "responsibility": "Parse do XML final e modelos do DANFE de contingência."
-    },
-    "offline-fiscal-number-service.js": {
-      "kind": "application-service",
-      "responsibility": "Reserva remota de faixa fiscal e persistência do lease local."
-    },
-    "offline-fiscal-number-maintenance.js": {
-      "kind": "worker",
-      "responsibility": "Manutenção preventiva do inventário local de numeração fiscal."
-    },
-    "offline-fiscal-sale-pipeline.js": {
-      "kind": "orchestrator",
-      "responsibility": "Decide elegibilidade fiscal e encadeia venda, assinatura, QR, DANFE e criação da fiscal outbox."
-    },
-    "offline-fiscal-outbox-worker.js": {
-      "kind": "worker",
-      "responsibility": "Claim, retry, reconciliação, conflito e estados terminais da fiscal outbox."
-    },
-    "offline-fiscal-runtime.js": {
-      "kind": "orchestrator",
-      "responsibility": "Ciclo de reconexão fiscal: recuperação de SENDING e execução do worker com transporte."
-    },
-    "offline-fiscal-svrs-transport.js": {
-      "kind": "transport",
-      "responsibility": "SOAP de autorização/consulta SVRS e classificação dos retornos fiscais."
-    },
-    "offline-fiscal-trust-anchors.js": {
-      "kind": "infrastructure",
-      "responsibility": "Âncoras TLS usadas pelo transporte SVRS."
-    },
-    "offline-standby.js": {
-      "kind": "desktop-infrastructure",
-      "responsibility": "Manifesto, pacote standby, ativação e rollback de slots offline."
-    },
-    "offline-ui-server.js": {
-      "kind": "desktop-infrastructure",
-      "responsibility": "Servidor HTTP loopback estrito para os arquivos da UI offline."
-    }
-  }
 }

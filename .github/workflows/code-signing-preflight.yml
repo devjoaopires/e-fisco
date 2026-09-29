@@ -1,0 +1,58 @@
+name: e-fisco Code Signing Preflight
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: eSigner environment
+        required: true
+        default: PROD
+        type: choice
+        options:
+          - PROD
+          - TEST
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e-fisco-code-signing-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Validate protected signing credentials
+    runs-on: windows-2025
+    timeout-minutes: 10
+    environment: code-signing-production
+    env:
+      SSL_COM_USERNAME: ${{ secrets.SSL_COM_USERNAME }}
+      SSL_COM_PASSWORD: ${{ secrets.SSL_COM_PASSWORD }}
+      SSL_COM_TOTP_SECRET: ${{ secrets.SSL_COM_TOTP_SECRET }}
+      SSL_COM_MODE: ${{ inputs.mode }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate secret boundary
+        shell: powershell
+        run: .\ci\validate-code-signing-secret-boundary.ps1
+
+      - name: Validate eSigner credentials presence
+        shell: powershell
+        run: .\ci\validate-code-signing-ci-secrets.ps1
+
+      - name: Confirm certificate state
+        shell: powershell
+        run: .\ci\validate-code-signing-certificate.ps1 -AllowPending
+
+      - name: Summarize preflight
+        if: always()
+        shell: powershell
+        run: |
+          Add-Content $env:GITHUB_STEP_SUMMARY "### e-fisco code signing preflight"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- environment: code-signing-production"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- mode: $env:SSL_COM_MODE"
+          Add-Content $env:GITHUB_STEP_SUMMARY "- secrets are never printed"

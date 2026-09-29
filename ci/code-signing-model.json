@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "decision": "managed-remote-signing-service-hsm-backed",
+  "scope": "publicly-trusted-windows-code-signing",
+  "status": "selected",
+  "privateKeyModel": {
+    "exportable": false,
+    "storedInRepository": false,
+    "storedAsGitHubSecretPfx": false,
+    "protection": "provider-managed-hsm",
+    "minimumRequirement": "CA/B-Forum-compliant-hardware-or-cloud-HSM"
+  },
+  "ciIntegration": {
+    "target": "github-actions-windows",
+    "authentication": "github-environment-secrets-for-esigner-cka",
+    "signingMethod": "eSigner CKA with SignTool",
+    "environment": "code-signing-production",
+    "secretsPolicyFile": "ci/code-signing-secrets-policy.json",
+    "localPrivateKeyRequired": false,
+    "oidcForSelectedProviderFlow": false
+  },
+  "artifacts": {
+    "policyFile": "ci/code-signing-policy.json",
+    "requiredOwnBinaries": [
+      "installer",
+      "application",
+      "updater-source",
+      "updater-packaged"
+    ]
+  },
+  "timestamping": {
+    "required": true,
+    "protocol": "RFC3161",
+    "digest": "SHA256",
+    "providerEndpoint": "http://ts.ssl.com",
+    "legacyRsaEndpoint": "http://ts.ssl.com/legacy",
+    "allowLegacyFallbackAutomatically": false,
+    "selectionStep": "2.5/6"
+  },
+  "signingConfiguration": {
+    "tool": "Microsoft SignTool",
+    "fileDigest": "SHA256",
+    "certificateSelector": "SHA1 thumbprint",
+    "certificateStore": "CurrentUser/My via eSigner CKA",
+    "timestampArgument": "/tr",
+    "timestampDigestArgument": "/td sha256",
+    "signingScript": "ci/sign-windows-binary.ps1",
+    "testScript": "ci/test-code-signing.ps1",
+    "status": "configured-pending-certificate-and-signtool"
+  },
+  "ciCredentialProvisioning": {
+    "step": "2.6/6",
+    "workflow": ".github/workflows/code-signing-preflight.yml",
+    "preflightScript": "ci/validate-code-signing-ci-secrets.ps1",
+    "environment": "code-signing-production",
+    "requiredSecrets": [
+      "SSL_COM_USERNAME",
+      "SSL_COM_PASSWORD",
+      "SSL_COM_TOTP_SECRET"
+    ],
+    "optionalAfterIssuanceSecrets": [
+      "SSL_COM_CREDENTIAL_ID"
+    ],
+    "nonSecretInputs": [
+      "SSL_COM_MODE"
+    ],
+    "repositoryContainsSecretValues": false,
+    "githubEnvironmentConfiguredRemotely": false,
+    "realCredentialsLoaded": false,
+    "status": "prepared-pending-provider-credentials-and-github-environment"
+  },
+  "providerSelection": {
+    "provider": "SSL.com",
+    "service": "eSigner for Code",
+    "certificateProfile": "OV Code Signing",
+    "trustModel": "public-trust",
+    "platform": "Microsoft Authenticode",
+    "ciCompatibility": "GitHub Actions via eSigner CKA/CodeSignTool",
+    "privateKeyLocation": "SSL.com cloud HSM",
+    "certificateStatus": "selected-not-yet-issued",
+    "account": null,
+    "credentialId": null,
+    "selectionStep": "2.2/6",
+    "nextStep": "2.3/6"
+  },
+  "certificateValidation": {
+    "status": "pending-certificate-issuance",
+    "requiredEkuOid": "1.3.6.1.5.5.7.3.3",
+    "requiredEkuName": "Code Signing",
+    "requireCurrentlyValid": true,
+    "requireTrustedChain": true,
+    "revocationMode": "Online",
+    "requirePrivateKeyBinding": true,
+    "expectedProvider": "SSL.com",
+    "expectedOrganizationName": null,
+    "expectedThumbprint": null,
+    "expectedSerialNumber": null,
+    "identityMustBeConfiguredBeforeStrictValidation": true,
+    "validator": "ci/validate-code-signing-certificate.ps1"
+  },
+  "prohibitedModels": [
+    "raw-private-key-in-repository",
+    "pfx-committed-to-repository",
+    "pfx-base64-stored-as-ci-secret-for-public-trust"
+  ],
+  "fallback": {
+    "model": "hardware-token-or-local-hsm",
+    "condition": "use-only-if-managed-remote-signing-service-is-not-available"
+  }
+}

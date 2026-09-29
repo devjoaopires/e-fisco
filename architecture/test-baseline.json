@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "observed-baseline",
+  "scope": "Etapa 3.2/8 - baseline executado no working tree atual",
+  "git": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e",
+    "dirty": true,
+    "note": "Baseline executado sobre o working tree atual. As alteracoes preexistentes de CI/code-signing foram preservadas; architecture/target-architecture.json e artefato da refatoracao."
+  },
+  "toolchain": {
+    "node": "24.18.1",
+    "npm": "11.16.0",
+    "electron": "43.4.1",
+    "electronRunAsNode": true,
+    "nodeSqliteDatabaseSync": true
+  },
+  "dependencyInstall": {
+    "command": "npm ci --no-audit --no-fund",
+    "packagesMaterialized": 295,
+    "packageLockUnchanged": true
+  },
+  "results": [
+    {
+      "command": "npm run test:ci",
+      "exitCode": 0,
+      "tests": 18,
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:unit",
+      "exitCode": 0,
+      "tests": 164,
+      "passed": 164,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:electron-security",
+      "exitCode": 0,
+      "tests": 58,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:integration",
+      "exitCode": 0,
+      "tests": 52,
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0,
+      "markers": [
+        "phase1-selftest: OK",
+        "phase2-db-selftest: OK"
+      ]
+    },
+    {
+      "command": "npm run test:db",
+      "exitCode": 0,
+      "tests": 19,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:fiscal",
+      "exitCode": 0,
+      "tests": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run test:architecture",
+      "exitCode": 0,
+      "tests": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "npm run phase1:selftest",
+      "exitCode": 0,
+      "status": "phase1-selftest: OK"
+    },
+    {
+      "command": "npm run phase2:db-selftest",
+      "exitCode": 0,
+      "status": "phase2-db-selftest: OK"
+    },
+    {
+      "command": "npm test",
+      "exitCode": 0,
+      "tests": 216,
+      "passed": 216,
+      "failed": 0,
+      "skipped": 0,
+      "markers": [
+        "phase1-selftest: OK",
+        "phase2-db-selftest: OK"
+      ]
+    }
+  ],
+  "overlapNote": "Os grupos sao sobrepostos: test:electron-security e test:ci sao subconjuntos de unit; test:db e test:fiscal sao subconjuntos de integration; test:architecture cruza unit e integration. O numero canonico da suite completa neste baseline e 216.",
+  "pipelineContractDriftObserved": [
+    {
+      "stage": "ci-contract",
+      "pipelineExpected": 12,
+      "observed": 18
+    },
+    {
+      "stage": "unit",
+      "pipelineExpected": 100,
+      "observed": 164
+    },
+    {
+      "stage": "integration",
+      "pipelineExpected": 52,
+      "observed": 52
+    },
+    {
+      "stage": "db",
+      "pipelineExpected": 19,
+      "observed": 19
+    },
+    {
+      "stage": "fiscal",
+      "pipelineExpected": 28,
+      "observed": 28
+    },
+    {
+      "stage": "architecture",
+      "pipelineExpected": 9,
+      "observed": 9
+    },
+    {
+      "stage": "full-suite",
+      "pipelineExpected": 152,
+      "observed": 216
+    }
+  ],
+  "interpretation": {
+    "testFailuresObserved": 0,
+    "environmentFailuresObserved": 0,
+    "baselineGreen": true,
+    "freshBuildExecuted": false,
+    "releaseValidationExecuted": false,
+    "nextStep": "3.3/8 - classificar e congelar falhas/divergencias preexistentes, incluindo drift de metadados do pipeline."
+  }
+}

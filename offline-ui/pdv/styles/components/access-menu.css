@@ -1,0 +1,27 @@
+  @media (min-width:1001px){
+    html body.scf-perfil-acesso-pendente .dock-actions #localizacaoBtn,
+    html body.scf-perfil-acesso-pendente .dock-actions #bloqueioBtn,
+    html body.scf-perfil-acesso-pendente .dock-actions #cadastrarBtn,
+    html body.scf-perfil-acesso-pendente .dock-actions #admin,
+    html body.scf-acesso-pdv-restrito .dock-actions #localizacaoBtn,
+    html body.scf-acesso-pdv-restrito .dock-actions #bloqueioBtn,
+    html body.scf-acesso-pdv-restrito .dock-actions #cadastrarBtn,
+    html body.scf-acesso-pdv-restrito .dock-actions #admin{
+      pointer-events:none !important;
+      cursor:not-allowed !important;
+      opacity:.38 !important;
+      filter:grayscale(1) !important;
+      -webkit-filter:grayscale(1) !important;
+      box-shadow:
+        inset 0 0 7px rgba(0,0,0,.18),
+        0 1px 3px rgba(0,0,0,.08) !important;
+    }
+
+    html body.scf-acesso-pdv-restrito .dock-actions #statusButton{
+      pointer-events:auto !important;
+      opacity:1 !important;
+      filter:none !important;
+      -webkit-filter:none !important;
+      cursor:pointer !important;
+    }
+  }

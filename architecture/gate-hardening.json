@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "completed",
+  "scope": "Etapa 3.4/8 - fortalecimento dos gates arquiteturais",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e"
+  },
+  "implementedGates": [
+    {
+      "id": "recursive-production-js-inventory",
+      "status": "active",
+      "effect": "Descoberta de JavaScript de producao agora e recursiva e usa paths repo-relative normalizados.",
+      "excluded": [
+        ".git/**",
+        ".github/**",
+        "architecture/**",
+        "ci/**",
+        "dist/**",
+        "node_modules/**",
+        "tests/**",
+        "offline-ui/vendor/**",
+        "*.bak.*",
+        "phase1/phase2 selftests"
+      ]
+    },
+    {
+      "id": "path-aware-commonjs-graph",
+      "status": "active",
+      "effect": "Requires relativos ./ e ../ sao resolvidos a partir do diretorio do modulo, com suporte a .js e index.js.",
+      "guard": "Require JavaScript local literal que nao resolve faz o teste falhar."
+    },
+    {
+      "id": "sqlite-owner-transition",
+      "status": "active",
+      "effect": "Enquanto offline-db/connection.js nao existe, o unico importador permitido de node:sqlite e offline-db.js; quando connection.js existir, ele passa automaticamente a ser o unico owner permitido."
+    },
+    {
+      "id": "raw-sql-debt-monotonic",
+      "status": "active",
+      "effect": "SQL bruto e considerado interno em offline-db.js e offline-db/**; fora dessa fronteira, apenas a divida historica conhecida e permitida e cada contagem so pode diminuir.",
+      "baselineDebt": {
+        "offline-cash-service.js": 5,
+        "offline-device-auth.js": 2,
+        "offline-fiscal-number-maintenance.js": 3,
+        "offline-sale-service.js": 2
+      },
+      "totalCeiling": 12,
+      "moduleCeiling": 4
+    },
+    {
+      "id": "offline-db-deep-import-boundary",
+      "status": "active",
+      "effect": "Consumidores externos nao podem importar offline-db/**; internals offline-db/** nao podem depender da fachada offline-db.js."
+    },
+    {
+      "id": "packaging-coverage",
+      "status": "active",
+      "effect": "Todo JavaScript de producao descoberto precisa ser coberto por package.json build.files.",
+      "futureBehavior": "A criacao de desktop/**, updater/**, offline/**, printing/** ou offline-db/** falhara no gate ate a allowlist de packaging incluir a nova raiz."
+    },
+    {
+      "id": "architecture-artifact-alignment",
+      "status": "active",
+      "effect": "Todo arquivo architecture/*.json ativo e validado contra a mesma release e schemaVersion; novos artefatos deixam de ficar fora do gate por lista estatica."
+    }
+  ],
+  "validation": {
+    "syntaxCheck": "passed",
+    "testArchitecture": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "fullSuite": {
+      "tests": 219,
+      "passed": 219,
+      "failed": 0,
+      "skipped": 0
+    },
+    "baselineDelta": {
+      "architectureTestsBefore": 9,
+      "architectureTestsAfter": 12,
+      "fullSuiteBefore": 216,
+      "fullSuiteAfter": 219,
+      "reason": "Tres novos gates arquiteturais foram adicionados; nao houve remocao de cobertura."
+    }
+  },
+  "integrity": {
+    "protectedPreexistingCiCodeSigningHashesMatchFreeze": true,
+    "packageLockUnchanged": true,
+    "packageLockSha256": "7e6aad7c0fa47f9f0c52bf49712ed234d35f03610372317fb6ecaca31db9c7e0",
+    "productionFilesChanged": false,
+    "currentArchitectureSnapshotsChanged": false
+  },
+  "modifiedFiles": [
+    "tests/unit/architecture-contracts.test.js",
+    "architecture/gate-hardening.json"
+  ],
+  "notChanged": [
+    "main.js",
+    "offline-db.js",
+    "offline-ui/pdv.html",
+    "architecture/module-responsibilities.json",
+    "architecture/dependency-analysis.json",
+    "architecture/boundary-contracts.json",
+    "package.json",
+    "package-lock.json"
+  ],
+  "remainingFutureGate": {
+    "id": "frontend-loader-model",
+    "requiredBefore": "P01-P05",
+    "status": "not-addressed-in-step-3.4",
+    "reason": "Serving restrito e modelo de carregamento do PDV pertencem aos testes de bridge/assets previstos no Passo 3.7 e a implementacao futura P01."
+  },
+  "nextStep": "3.5/8 - criar o teste critico de revalidacao backend de estoque na venda normal."
+}

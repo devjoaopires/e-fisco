@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "policyName": "e-fisco-windows-code-signing",
+  "versionSource": "package.json",
+  "requiredSignedBinaries": [
+    {
+      "id": "installer",
+      "role": "installer",
+      "pathTemplate": "dist/e-fisco-Setup-${version}.exe",
+      "owner": "e-fisco",
+      "requiredSigner": "e-fisco"
+    },
+    {
+      "id": "application",
+      "role": "application",
+      "path": "dist/win-unpacked/e-fisco.exe",
+      "owner": "e-fisco",
+      "requiredSigner": "e-fisco"
+    },
+    {
+      "id": "updater-source",
+      "role": "updater",
+      "path": "EFISCO-UPDATER.exe",
+      "owner": "e-fisco",
+      "requiredSigner": "e-fisco"
+    },
+    {
+      "id": "updater-packaged",
+      "role": "updater",
+      "path": "dist/win-unpacked/resources/app.asar.unpacked/EFISCO-UPDATER.exe",
+      "owner": "e-fisco",
+      "requiredSigner": "e-fisco",
+      "sameContentAs": "updater-source"
+    }
+  ],
+  "thirdPartyBinaries": [
+    {
+      "path": "dist/win-unpacked/resources/elevate.exe",
+      "role": "privilege-elevation-helper"
+    },
+    {
+      "path": "dist/win-unpacked/d3dcompiler_47.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/dxcompiler.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/dxil.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/ffmpeg.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/libEGL.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/libGLESv2.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/vk_swiftshader.dll",
+      "role": "runtime-library"
+    },
+    {
+      "path": "dist/win-unpacked/vulkan-1.dll",
+      "role": "runtime-library"
+    }
+  ],
+  "policy": {
+    "rejectMissingRequiredBinary": true,
+    "rejectUnsignedRequiredBinary": true,
+    "rejectInvalidRequiredSignature": true,
+    "requireExpectedSignerForOwnBinaries": true,
+    "doNotRequireEFiscoSignerForThirdPartyBinaries": true,
+    "preserveValidVendorSignatures": true
+  }
+}

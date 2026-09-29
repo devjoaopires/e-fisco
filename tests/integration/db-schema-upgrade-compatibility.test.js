@@ -775,3 +775,135 @@ test('histórico de migration adulterado é rejeitado antes de novas migrations'
     }
   }, 'efisco-step55-history-');
 });
+
+
+test('histórico com lacuna de versão é rejeitado antes de reaplicar migrations', async () => {
+  await withTempDir(async (userDataDir) => {
+    try {
+      createCurrentDatabase(userDataDir);
+    } finally {
+      closeOfflineDatabase();
+    }
+
+    {
+      const db = openRawDatabase(userDataDir);
+      try {
+        db.prepare(
+          'DELETE FROM schema_migrations WHERE version = 7'
+        ).run();
+      } finally {
+        db.close();
+      }
+    }
+
+    assert.throws(
+      () => initializeOfflineDatabase({ userDataDir }),
+      /versões ausentes, duplicadas ou fora de ordem/
+    );
+
+    const db = openRawDatabase(userDataDir);
+    try {
+      const rows = migrationRows(db);
+      assert.equal(rows.length, 12);
+      assert.equal(
+        rows.some((row) => row.version === 7),
+        false
+      );
+
+      const meta = db.prepare(
+        'SELECT schema_version FROM offline_meta WHERE singleton_id = 1'
+      ).get();
+
+      assert.equal(
+        Number(meta.schema_version),
+        OFFLINE_DB_SCHEMA_VERSION
+      );
+    } finally {
+      db.close();
+    }
+  }, 'efisco-stage7-gap-');
+});
+
+test('offline_meta divergente do histórico é rejeitado sem autocorreção', async () => {
+  await withTempDir(async (userDataDir) => {
+    try {
+      createCurrentDatabase(userDataDir);
+    } finally {
+      closeOfflineDatabase();
+    }
+
+    {
+      const db = openRawDatabase(userDataDir);
+      try {
+        db.prepare(
+          'UPDATE offline_meta SET schema_version = 12 WHERE singleton_id = 1'
+        ).run();
+      } finally {
+        db.close();
+      }
+    }
+
+    assert.throws(
+      () => initializeOfflineDatabase({ userDataDir }),
+      /Metadados SQLite incompatíveis: offline_meta=12, migrations=13/
+    );
+
+    const db = openRawDatabase(userDataDir);
+    try {
+      assert.equal(
+        migrationRows(db).length,
+        OFFLINE_DB_SCHEMA_VERSION
+      );
+
+      const meta = db.prepare(
+        'SELECT schema_version FROM offline_meta WHERE singleton_id = 1'
+      ).get();
+
+      assert.equal(Number(meta.schema_version), 12);
+    } finally {
+      db.close();
+    }
+  }, 'efisco-stage7-meta-mismatch-');
+});
+
+test('offline_meta futuro sem migration futura também bloqueia downgrade silencioso', async () => {
+  await withTempDir(async (userDataDir) => {
+    try {
+      createCurrentDatabase(userDataDir);
+    } finally {
+      closeOfflineDatabase();
+    }
+
+    {
+      const db = openRawDatabase(userDataDir);
+      try {
+        db.prepare(
+          'UPDATE offline_meta SET schema_version = 14 WHERE singleton_id = 1'
+        ).run();
+      } finally {
+        db.close();
+      }
+    }
+
+    assert.throws(
+      () => initializeOfflineDatabase({ userDataDir }),
+      /Schema SQLite mais novo que este aplicativo: 14 > 13/
+    );
+
+    const db = openRawDatabase(userDataDir);
+    try {
+      assert.equal(
+        migrationRows(db).length,
+        OFFLINE_DB_SCHEMA_VERSION
+      );
+
+      const meta = db.prepare(
+        'SELECT schema_version FROM offline_meta WHERE singleton_id = 1'
+      ).get();
+
+      assert.equal(Number(meta.schema_version), 14);
+    } finally {
+      db.close();
+    }
+  }, 'efisco-stage7-future-meta-only-');
+});

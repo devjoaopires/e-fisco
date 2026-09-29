@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "completed",
+  "scope": "Etapa 3.5/8 - revalidacao backend de estoque da venda normal",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e"
+  },
+  "riskAddressed": "A venda normal podia persistir debito de estoque sem revalidar no backend a disponibilidade atual depois de movimentos locais pendentes.",
+  "redGreenEvidence": {
+    "beforeFix": {
+      "testFile": "tests/integration/db-sale-stock-revalidation.test.js",
+      "tests": 3,
+      "passed": 1,
+      "failed": 2,
+      "failures": [
+        "venda normal aceitava nova quantidade mesmo quando venda local pendente ja havia consumido parte do estoque",
+        "linhas repetidas do mesmo produto nao eram agregadas para comparar a quantidade total solicitada"
+      ]
+    },
+    "afterFix": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "implementation": {
+    "owner": "offline-db.js#registerOfflineSaleAtomic",
+    "helper": "assertNormalSaleStockAvailableInTransaction",
+    "transaction": "BEGIN IMMEDIATE",
+    "placement": "apos adquirir a transacao de escrita e antes do primeiro INSERT em sales",
+    "availabilityRule": "quantidadeEstoque do products_cache + soma dos deltas de stock_movements ligados a sync_outbox ainda nao CONFIRMED",
+    "aggregation": "quantidades de todas as linhas da venda sao somadas por produto antes da verificacao",
+    "failureBehavior": "estoque insuficiente gera excecao e nenhum registro da nova venda, sale_item, stock movement ou outbox e persistido",
+    "skipRule": "a verificacao nao roda quando skipStockMovements esta ativo, preservando o fluxo existente de liquidacao de crediario que nao deve baixar estoque novamente"
+  },
+  "testCases": [
+    "rejeita oversell causado por venda local anterior ainda pendente de sync",
+    "rejeita oversell distribuido em duas linhas do mesmo produto na mesma venda",
+    "aceita consumo exatamente igual ao saldo backend calculado"
+  ],
+  "validation": {
+    "targetedGate": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "testDb": {
+      "tests": 22,
+      "passed": 22,
+      "failed": 0
+    },
+    "testFiscal": {
+      "tests": 28,
+      "passed": 28,
+      "failed": 0
+    },
+    "testArchitecture": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "testIntegration": {
+      "tests": 55,
+      "passed": 55,
+      "failed": 0
+    },
+    "fullSuite": {
+      "tests": 222,
+      "passed": 222,
+      "failed": 0,
+      "skipped": 0
+    },
+    "phase2DbSelftest": "OK"
+  },
+  "compatibilityAdjustment": {
+    "file": "phase2-db-selftest.js",
+    "reason": "O self-test fiscal usava um produto inexistente para chegar ao erro de lease fiscal. O fixture passou a semear um produto ativo com estoque, preservando a assercao original de rollback por contador fiscal ausente."
+  },
+  "architectureArtifacts": {
+    "boundaryContracts": "adicionado contrato sale-stock-revalidation",
+    "targetArchitecture": "normal-sale-stock-backend-revalidation movido de missing para completed",
+    "moduleResponsibilitiesChanged": false,
+    "dependencyAnalysisChanged": false
+  },
+  "nextStep": "3.6/8 - criar testes de continuidade, failover e recovery."
+}

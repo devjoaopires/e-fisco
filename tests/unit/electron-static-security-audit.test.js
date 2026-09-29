@@ -14,6 +14,23 @@ const PRELOAD = fs.readFileSync(
   path.join(ROOT, 'preload.js'),
   'utf8'
 );
+const FISCAL_COUNTER_BRIDGE = fs.readFileSync(
+  path.join(
+    ROOT,
+    'offline',
+    'fiscal',
+    'fiscal-counter-bridge.js'
+  ),
+  'utf8'
+);
+const FRAME_PRINT_BRIDGE = fs.readFileSync(
+  path.join(
+    ROOT,
+    'printing',
+    'frame-print-bridge.js'
+  ),
+  'utf8'
+);
 
 function blockBetween(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
@@ -108,6 +125,9 @@ function combinedProductionSource() {
 }
 
 test('WebPreferences permanecem endurecidas sem flags regressivas', () => {
+  const source =
+    combinedProductionSource();
+
   for (const forbidden of [
     /nodeIntegration\s*:\s*true/,
     /contextIsolation\s*:\s*false/,
@@ -117,12 +137,12 @@ test('WebPreferences permanecem endurecidas sem flags regressivas', () => {
     /experimentalFeatures\s*:\s*true/,
     /enableRemoteModule\s*:\s*true/
   ]) {
-    assert.doesNotMatch(MAIN, forbidden);
+    assert.doesNotMatch(source, forbidden);
   }
 
   assert.ok(
     (
-      MAIN.match(
+      source.match(
         /contextIsolation\s*:\s*true/g
       ) || []
     ).length >= 2
@@ -130,7 +150,7 @@ test('WebPreferences permanecem endurecidas sem flags regressivas', () => {
 
   assert.ok(
     (
-      MAIN.match(
+      source.match(
         /nodeIntegration\s*:\s*false/g
       ) || []
     ).length >= 2
@@ -138,7 +158,7 @@ test('WebPreferences permanecem endurecidas sem flags regressivas', () => {
 
   assert.ok(
     (
-      MAIN.match(
+      source.match(
         /sandbox\s*:\s*true/g
       ) || []
     ).length >= 2
@@ -195,14 +215,14 @@ test('produção não reintroduz eval ou Function dinâmica', () => {
   );
 });
 
-test('navegação e popup continuam protegidos nas duas superfícies', () => {
+test('navegação e popup continuam protegidos em todas as superfícies Electron', () => {
   assert.equal(
     (
       MAIN.match(
         /\.setWindowOpenHandler\s*\(/g
       ) || []
     ).length,
-    2
+    3
   );
 
   assert.match(
@@ -230,12 +250,12 @@ test('marcadores privilegiados de console exigem o frame PDV reconhecido', () =>
   );
 
   assert.match(
-    MAIN,
+    FRAME_PRINT_BRIDGE,
     /privilegedFrameMarker[\s\S]{0,900}await isTrustedPdvFrameForContents\(/
   );
 
   assert.match(
-    MAIN,
+    FRAME_PRINT_BRIDGE,
     /FRAME BRIDGE DENIED/
   );
 });
@@ -243,19 +263,19 @@ test('marcadores privilegiados de console exigem o frame PDV reconhecido', () =>
 test('contador NFC-e exige identidade do PDV online e origin coerente', () => {
   const block =
     blockBetween(
-      MAIN,
-      'async function processarContadorFiscalDoFrame',
-      'async function responderErroContadorFiscalDoFrame'
+      FISCAL_COUNTER_BRIDGE,
+      'async function process(',
+      'async function respondError('
     );
 
   assert.match(
     block,
-    /trustedOnlinePdvFrame !== frame/
+    /trustedOnlinePdvFrame\s*!==\s*frame/
   );
 
   assert.match(
     block,
-    /origem !== frameOrigin/
+    /origem\s*!==\s*frameOrigin/
   );
 
   assert.match(
@@ -267,9 +287,9 @@ test('contador NFC-e exige identidade do PDV online e origin coerente', () => {
 test('ponte TOP de impressão fixa o origin do PDV e não responde com wildcard', () => {
   const block =
     blockBetween(
-      MAIN,
-      'async function instalarPonteTopDeImpressao()',
-      'async function limparTudoDaSessao()'
+      FRAME_PRINT_BRIDGE,
+      'async function installTopPrintBridge()',
+      'return Object.freeze({'
     );
 
   assert.match(

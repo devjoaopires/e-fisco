@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "frozen-reference",
+  "scope": "Etapa 3.3/8 - classificacao e congelamento do baseline pre-refatoracao",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e",
+    "workingTreeExpectedDirty": true
+  },
+  "classification": {
+    "testFailures": {
+      "count": 0,
+      "severity": "none",
+      "policy": "Nao existe falha de teste preexistente aceita. Qualquer falha futura nas suites congeladas e regressao candidata ate prova em contrario."
+    },
+    "environmentFailures": {
+      "currentCount": 0,
+      "repairedDuringStep31": [
+        "Node/npm ausentes no PATH operacional do agente",
+        "cache portatil Node 24.18.1 incompleto",
+        "node_modules ausente"
+      ],
+      "currentState": "Node 24.18.1, npm 11.16.0, Electron 43.4.1 e dependencias materializadas",
+      "policy": "Falha futura causada exclusivamente por ausencia/corrupcao da toolchain deve ser classificada como ambiente, nao como regressao de produto, mas precisa ser corrigida antes de aceitar um lote."
+    },
+    "metadataDrift": [
+      {
+        "id": "pipeline-ci-count",
+        "file": "ci/pipeline-contract.json",
+        "field": "stages[ci-contract].expectedBaselineTests",
+        "declared": 12,
+        "observed": 18,
+        "classification": "preexisting-metadata-drift",
+        "blockingTests": false
+      },
+      {
+        "id": "pipeline-unit-count",
+        "file": "ci/pipeline-contract.json",
+        "field": "stages[unit].expectedBaselineTests",
+        "declared": 100,
+        "observed": 164,
+        "classification": "preexisting-metadata-drift",
+        "blockingTests": false
+      },
+      {
+        "id": "pipeline-full-count",
+        "file": "ci/pipeline-contract.json",
+        "field": "stages[full-suite].expectedBaselineTests",
+        "declared": 152,
+        "observed": 216,
+        "classification": "preexisting-metadata-drift",
+        "blockingTests": false
+      }
+    ],
+    "installWarnings": [
+      {
+        "id": "deprecated-transitive-dependencies",
+        "observedDuring": "npm ci --no-audit --no-fund",
+        "packages": [
+          "inflight@1.0.6",
+          "lodash.isequal@4.5.0",
+          "rimraf@2.6.3",
+          "glob@7.2.3",
+          "boolean@3.2.0"
+        ],
+        "classification": "non-blocking-tooling-warning",
+        "baselineImpact": "none"
+      },
+      {
+        "id": "npm-allow-scripts-electron-winstaller",
+        "observedDuring": "npm ci --no-audit --no-fund",
+        "package": "electron-winstaller@5.4.0",
+        "classification": "build-release-gate-unresolved",
+        "testBaselineImpact": "none",
+        "note": "Nao foi executado fresh build neste baseline. O warning deve ser reavaliado antes de considerar build/release validado."
+      }
+    ],
+    "unverifiedAtStep32": [
+      {
+        "area": "fresh Windows NSIS build",
+        "classification": "not-baselined-yet"
+      },
+      {
+        "area": "fresh release validation",
+        "classification": "not-baselined-yet"
+      }
+    ]
+  },
+  "frozenTestBaseline": {
+    "canonicalFullSuite": {
+      "command": "npm test",
+      "tests": 216,
+      "passed": 216,
+      "failed": 0,
+      "skipped": 0
+    },
+    "groups": {
+      "test:ci": {
+        "tests": 18,
+        "failed": 0
+      },
+      "test:unit": {
+        "tests": 164,
+        "failed": 0
+      },
+      "test:electron-security": {
+        "tests": 58,
+        "failed": 0
+      },
+      "test:integration": {
+        "tests": 52,
+        "failed": 0
+      },
+      "test:db": {
+        "tests": 19,
+        "failed": 0
+      },
+      "test:fiscal": {
+        "tests": 28,
+        "failed": 0
+      },
+      "test:architecture": {
+        "tests": 9,
+        "failed": 0
+      },
+      "phase1:selftest": "OK",
+      "phase2:db-selftest": "OK"
+    },
+    "countPolicy": "Reducao de contagem exige justificativa explicita. Aumento e permitido quando acompanhado pela atualizacao dos metadados/gates correspondentes."
+  },
+  "protectedPreexistingWorkingTree": {
+    "policy": "Estes arquivos pertencem ao trabalho de CI/code-signing que ja estava em andamento. Lotes da refatoracao arquitetural nao devem altera-los, resetá-los nem inclui-los em commits sem intencao explicita.",
+    "files": [
+      {
+        "path": "ci/validate-release.ps1",
+        "gitState": "modified",
+        "sha256": "bd158e784e1ccf180d454ba97a7795e3ff83ee4e4d1510d7878c5a524de332f6"
+      },
+      {
+        "path": "tests/unit/ci-workflow-contract.test.js",
+        "gitState": "modified",
+        "sha256": "00ddb221a5f6de33b4c4af444a7760d5e6b8afaeea8905be6ad19fc753836dd0"
+      },
+      {
+        "path": ".github/workflows/code-signing-preflight.yml",
+        "gitState": "untracked",
+        "sha256": "1e932ce4ec654557a2191f7f7c8633320dfea0d6f716f24c7fa41934736fddca"
+      },
+      {
+        "path": "ci/code-signing-model.json",
+        "gitState": "untracked",
+        "sha256": "d77567c33d63f3dee2a18bb8d0f98290fd94346c0e08c6eaed1afccc40c4f653"
+      },
+      {
+        "path": "ci/code-signing-policy.json",
+        "gitState": "untracked",
+        "sha256": "ec5b0a792b7f52d977349be785eb34c3b2d790cf6377275a3ec3b09bfbeef61d"
+      },
+      {
+        "path": "ci/code-signing-secrets-policy.json",
+        "gitState": "untracked",
+        "sha256": "ebf08a4518b7c63b71fce5e580d0df96643d6ec4104f2fd4d4df4192ce704eac"
+      },
+      {
+        "path": "ci/sign-windows-binary.ps1",
+        "gitState": "untracked",
+        "sha256": "a3ae7862882ece518c5112422b34a4794f2e851a6ecdbf01fdabf64b5e12f9c8"
+      },
+      {
+        "path": "ci/test-code-signing.ps1",
+        "gitState": "untracked",
+        "sha256": "e671edbd8fef39faa7deb48f616c4dfd9d129d7ebd0da81a10924e35c50c8439"
+      },
+      {
+        "path": "ci/validate-code-signing-certificate.ps1",
+        "gitState": "untracked",
+        "sha256": "94c0ff2a4143238dedf8c894c7c771df7e7ec93c46dcc8d24804781cabc5ad9d"
+      },
+      {
+        "path": "ci/validate-code-signing-ci-secrets.ps1",
+        "gitState": "untracked",
+        "sha256": "76cd3b8c8de64f2154609485990b8a0727fc21e49bf559d0f89e597ea6ebfdde"
+      },
+      {
+        "path": "ci/validate-code-signing-inventory.ps1",
+        "gitState": "untracked",
+        "sha256": "a41f857ba60627fa080c61eacb69acbac2220785e140ed36acc2f3e3289220c6"
+      },
+      {
+        "path": "ci/validate-code-signing-secret-boundary.ps1",
+        "gitState": "untracked",
+        "sha256": "b0df37ca0393ec1355e1edb6a23cc7792eb48ac9effdeaa6172b41b876113f7e"
+      }
+    ]
+  },
+  "refactorArtifacts": [
+    {
+      "path": "architecture/target-architecture.json",
+      "sha256AtFreeze": "f6f0d3281d3b3080a60b7c5e9fff7f18d5b7ebf5956868d0ce0948f3ff75e6a3"
+    },
+    {
+      "path": "architecture/test-baseline.json",
+      "sha256AtFreeze": "ef867c3edd152d74fa1eb7a3787917061a6056df4ade5981b4785b568b20ed64"
+    }
+  ],
+  "dependencyLock": {
+    "path": "package-lock.json",
+    "sha256": "7e6aad7c0fa47f9f0c52bf49712ed234d35f03610372317fb6ecaca31db9c7e0",
+    "policy": "Nao alterar durante refatoracao arquitetural salvo tarefa de dependencia explicitamente aprovada."
+  },
+  "pipelineContractReference": {
+    "path": "ci/pipeline-contract.json",
+    "sha256": "6baa00548b8f687504c677bf010aa9c07f382c78b739894c4121fab3b6526bb7",
+    "note": "Hash inclui os metadados de contagem atualmente defasados; a defasagem esta registrada acima e nao deve ser confundida com regressao funcional."
+  },
+  "regressionDecisionRules": [
+    "Se uma suite anteriormente verde passa a falhar depois de um lote, tratar como regressao candidata e bloquear o lote ate diagnostico.",
+    "Falha reproduzida sem o lote, causada por toolchain/host, pode ser classificada como ambiente; ainda assim o lote nao e aceito sem gate executavel.",
+    "Mudanca inesperada de hash em protectedPreexistingWorkingTree indica contaminacao do trabalho de CI/code-signing.",
+    "Reducao da quantidade de testes exige revisao explicita; testes removidos nao podem ser mascarados como baseline verde.",
+    "Fresh build e release validation nao possuem baseline verde nesta etapa e nao devem ser alegados como previamente aprovados."
+  ],
+  "nextStep": "3.4/8 - fortalecer os gates arquiteturais para suportar a arvore modular futura e packaging."
+}

@@ -1,0 +1,64 @@
+{
+  "release": "1.0.43",
+  "capturedAt": "2026-09-28",
+  "trigger": "manual-real-world-test-white-window-with-internet",
+  "confirmedRootCause": {
+    "initialUrl": "https://jpiresoficial.wixstudio.com/e-fisco",
+    "initialHttpStatus": 301,
+    "redirectLocation": "https://plataforma.e-fisco.app/",
+    "redirectTargetHttpStatus": 200,
+    "release1042Behavior": "BLOCK",
+    "release1042Reason": "UNTRUSTED_NAVIGATION_TARGET",
+    "observedLog": "MAIN WINDOW NAVIGATION DENIED",
+    "effect": "ONLINE INITIAL LOAD FAILED / white window"
+  },
+  "fix": {
+    "trustedOnlineOrigins": [
+      "https://jpiresoficial.wixstudio.com",
+      "https://plataforma.e-fisco.app"
+    ],
+    "navigationExactOriginAllowlist": true,
+    "ipcExactOriginAllowlist": true,
+    "lookalikeOriginsRemainBlocked": true,
+    "httpVariantBlocked": true,
+    "customPortVariantBlocked": true,
+    "embeddedCredentialsBlocked": true
+  },
+  "validation": {
+    "targetedSecurityTests": {
+      "tests": 53,
+      "passed": 53,
+      "failed": 0
+    },
+    "fullUnitIntegration": {
+      "tests": 595,
+      "passed": 595,
+      "failed": 0
+    },
+    "scale": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "resilience": {
+      "tests": 8,
+      "passed": 8,
+      "failed": 0
+    },
+    "desktopE2E": {
+      "tests": 1,
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "build": {
+    "status": "VALIDATED_QA_UNSIGNED",
+    "installer": "dist/e-fisco-Setup-1.0.43.exe",
+    "installerBytes": 107188481,
+    "installerSha256": "8430AAD0F404B84954ED24081E25F598C65DA95875D8785D7255404B549847BD",
+    "releaseValidator": "OK",
+    "asarSourceHashMatch": true,
+    "upgradeFrom1042": "OK",
+    "signature": "NotSigned"
+  }
+}

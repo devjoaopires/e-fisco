@@ -1,12 +1,14 @@
 node_modules/
 dist/
+dist.*/
+.tooling/
 
 # Local logs and temporary files
 *.log
+*.pid
 .step*
 efisco-step*
-*.bak.*
-*.manual-*.bak
+*.bak*
 
 # Environment / credentials / local secrets
 .env

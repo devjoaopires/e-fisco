@@ -1,229 +1,431 @@
 {
-  "schemaVersion": 1,
-  "release": "1.0.41",
-  "sourceMap": "architecture/module-responsibilities.json",
-  "scope": "static-local-commonjs-require-graph",
-  "graph": {
-    "nodes": 29,
-    "edges": 54,
-    "stronglyConnectedComponents": 29,
-    "cycleComponents": 0,
-    "acyclic": true,
-    "longestPathEdges": 6,
-    "longestPath": [
-      "main.js",
-      "offline-sale-service.js",
-      "offline-fiscal-sale-pipeline.js",
-      "offline-fiscal-nfce-danfe.js",
-      "offline-fiscal-nfce-qrcode.js",
-      "offline-fiscal-xml-signer.js",
-      "offline-fiscal-certificate-store.js"
+    "schemaVersion": 1,
+    "release": "1.0.44",
+    "sourceMap": "architecture/module-responsibilities.json",
+    "scope": "static-local-commonjs-require-graph",
+    "graph": {
+        "nodes": 225,
+        "edges": 147,
+        "stronglyConnectedComponents": 225,
+        "cycleComponents": 0,
+        "acyclic": true,
+        "longestPathEdges": 8,
+        "longestPath": [
+            "main.js",
+            "offline-sale-service.js",
+            "offline-fiscal-sale-pipeline.js",
+            "offline-fiscal-nfce-danfe.js",
+            "offline-fiscal-nfce-qrcode.js",
+            "offline-db.js",
+            "offline-db/migrations/index.js",
+            "offline-db/migrations/versions/index.js",
+            "offline-db/transaction.js"
+        ]
+    },
+    "entrypointReachability": {
+        "roots": [
+            "main.js",
+            "preload.js",
+            "phase2-pair-device.js"
+        ],
+        "transitiveReach": {
+            "main.js": 91,
+            "preload.js": 0,
+            "phase2-pair-device.js": 29
+        },
+        "combinedReachableIncludingRoots": 94,
+        "notReachableFromEntrypoints": [
+            "offline-fiscal-number-maintenance.js",
+            "offline-fiscal-number-service.js",
+            "offline-ui/pdv/bootstrap.js",
+            "offline-ui/pdv/compat/legacy-globals.js",
+            "offline-ui/pdv/contracts/events.js",
+            "offline-ui/pdv/contracts/messages.js",
+            "offline-ui/pdv/contracts/storage-keys.js",
+            "offline-ui/pdv/domains/cash/back-label.js",
+            "offline-ui/pdv/domains/cash/closing-term-back.js",
+            "offline-ui/pdv/domains/cash/core.js",
+            "offline-ui/pdv/domains/cash/domain.js",
+            "offline-ui/pdv/domains/cash/receipt-close-on-leave.js",
+            "offline-ui/pdv/domains/cash/receipt.js",
+            "offline-ui/pdv/domains/cash/return-to-pdv.js",
+            "offline-ui/pdv/domains/continuity/core.js",
+            "offline-ui/pdv/domains/continuity/domain.js",
+            "offline-ui/pdv/domains/crediario/back.js",
+            "offline-ui/pdv/domains/crediario/core.js",
+            "offline-ui/pdv/domains/crediario/detail-pdv-close.js",
+            "offline-ui/pdv/domains/crediario/domain.js",
+            "offline-ui/pdv/domains/crediario/focus-protection.js",
+            "offline-ui/pdv/domains/crediario/list-inputs-lock.js",
+            "offline-ui/pdv/domains/crediario/list-keyboard.js",
+            "offline-ui/pdv/domains/crediario/list-top-back.js",
+            "offline-ui/pdv/domains/crediario/offline-confirm-visibility.js",
+            "offline-ui/pdv/domains/crediario/return-to-pdv.js",
+            "offline-ui/pdv/domains/crediario/shortcut-legend.js",
+            "offline-ui/pdv/domains/crediario/side-menu-lock.js",
+            "offline-ui/pdv/domains/customer/create-update.js",
+            "offline-ui/pdv/domains/customer/delete.js",
+            "offline-ui/pdv/domains/customer/domain.js",
+            "offline-ui/pdv/domains/customer/edit.js",
+            "offline-ui/pdv/domains/customer/list.js",
+            "offline-ui/pdv/domains/finance/calendar-toggle.js",
+            "offline-ui/pdv/domains/finance/core.js",
+            "offline-ui/pdv/domains/finance/decor-grid.js",
+            "offline-ui/pdv/domains/finance/domain.js",
+            "offline-ui/pdv/domains/finance/entry-calendar-form.js",
+            "offline-ui/pdv/domains/finance/entry-cash-sync.js",
+            "offline-ui/pdv/domains/finance/entry-label.js",
+            "offline-ui/pdv/domains/finance/entry-month-calendar.js",
+            "offline-ui/pdv/domains/finance/exit-calendar.js",
+            "offline-ui/pdv/domains/finance/exit-form.js",
+            "offline-ui/pdv/domains/finance/payable-status-reload.js",
+            "offline-ui/pdv/domains/finance/receivable-status.js",
+            "offline-ui/pdv/domains/finance/summary.js",
+            "offline-ui/pdv/domains/fiscal/completed-footer.js",
+            "offline-ui/pdv/domains/fiscal/domain.js",
+            "offline-ui/pdv/domains/fiscal/processing-footer.js",
+            "offline-ui/pdv/domains/fiscal/receipt.js",
+            "offline-ui/pdv/domains/history/aligned-card.js",
+            "offline-ui/pdv/domains/history/annual-dashboard.js",
+            "offline-ui/pdv/domains/history/calendar-photo.js",
+            "offline-ui/pdv/domains/history/calendar.js",
+            "offline-ui/pdv/domains/history/close-document-reset.js",
+            "offline-ui/pdv/domains/history/close-restore-dock.js",
+            "offline-ui/pdv/domains/history/compact-card-fix.js",
+            "offline-ui/pdv/domains/history/compact-card.js",
+            "offline-ui/pdv/domains/history/core.js",
+            "offline-ui/pdv/domains/history/domain.js",
+            "offline-ui/pdv/domains/history/embedded-view.js",
+            "offline-ui/pdv/domains/history/filters.js",
+            "offline-ui/pdv/domains/history/inline-receipt.js",
+            "offline-ui/pdv/domains/history/monthly-dashboard.js",
+            "offline-ui/pdv/domains/history/receipt-close-menu.js",
+            "offline-ui/pdv/domains/history/reset-month-on-exit.js",
+            "offline-ui/pdv/domains/history/second-copy-click.js",
+            "offline-ui/pdv/domains/history/second-copy-state.js",
+            "offline-ui/pdv/domains/history/table-layout.js",
+            "offline-ui/pdv/domains/history/title.js",
+            "offline-ui/pdv/domains/inventory/annual-sales-dashboard.js",
+            "offline-ui/pdv/domains/inventory/core.js",
+            "offline-ui/pdv/domains/inventory/dashboard-cleanup.js",
+            "offline-ui/pdv/domains/inventory/dashboard-decision.js",
+            "offline-ui/pdv/domains/inventory/dashboard-v3.js",
+            "offline-ui/pdv/domains/inventory/dashboard-v4.js",
+            "offline-ui/pdv/domains/inventory/dashboard-v5.js",
+            "offline-ui/pdv/domains/inventory/decor.js",
+            "offline-ui/pdv/domains/inventory/domain.js",
+            "offline-ui/pdv/domains/inventory/keyboard-navigation.js",
+            "offline-ui/pdv/domains/inventory/right-panel.js",
+            "offline-ui/pdv/domains/printing/domain.js",
+            "offline-ui/pdv/domains/printing/frame-controller.js",
+            "offline-ui/pdv/domains/printing/history-receipt-view.js",
+            "offline-ui/pdv/domains/products/domain.js",
+            "offline-ui/pdv/domains/products/search.js",
+            "offline-ui/pdv/domains/sale-payment/auto-payment.js",
+            "offline-ui/pdv/domains/sale-payment/domain.js",
+            "offline-ui/pdv/domains/sale-payment/finalize-back.js",
+            "offline-ui/pdv/domains/sale-payment/finalize-menu.js",
+            "offline-ui/pdv/domains/sale-payment/finalize-standby.js",
+            "offline-ui/pdv/domains/sale-payment/identification-autofocus.js",
+            "offline-ui/pdv/domains/sale-payment/identification-back.js",
+            "offline-ui/pdv/domains/sale-payment/identification-fields-nav.js",
+            "offline-ui/pdv/domains/sale-payment/identification-optional.js",
+            "offline-ui/pdv/domains/sale-payment/identification-person-nav.js",
+            "offline-ui/pdv/domains/sale-payment/internal-sale-toggle.js",
+            "offline-ui/pdv/domains/sale-payment/normal-sale-f11-lock.js",
+            "offline-ui/pdv/domains/sale-payment/payment-core.js",
+            "offline-ui/pdv/domains/sale-payment/sale-core.js",
+            "offline-ui/pdv/domains/superadmin/certificate-a1.js",
+            "offline-ui/pdv/domains/superadmin/companies-panel.js",
+            "offline-ui/pdv/domains/superadmin/company-details.js",
+            "offline-ui/pdv/domains/superadmin/company-edit.js",
+            "offline-ui/pdv/domains/superadmin/company-fiscal-tabs.js",
+            "offline-ui/pdv/domains/superadmin/company-form.js",
+            "offline-ui/pdv/domains/superadmin/contact-fields.js",
+            "offline-ui/pdv/domains/superadmin/customer-shell.js",
+            "offline-ui/pdv/domains/superadmin/details-cleanup.js",
+            "offline-ui/pdv/domains/superadmin/domain.js",
+            "offline-ui/pdv/domains/superadmin/fiscal-certificate-selector.js",
+            "offline-ui/pdv/domains/superadmin/form-state.js",
+            "offline-ui/pdv/domains/superadmin/primary-action.js",
+            "offline-ui/pdv/domains/superadmin/residual-arrow-cleanup.js",
+            "offline-ui/pdv/domains/suppliers/coordinator.js",
+            "offline-ui/pdv/domains/suppliers/crud.js",
+            "offline-ui/pdv/domains/suppliers/domain.js",
+            "offline-ui/pdv/domains/suppliers/registration-ui.js",
+            "offline-ui/pdv/infra/browser-network.js",
+            "offline-ui/pdv/infra/dom.js",
+            "offline-ui/pdv/infra/event-bus.js",
+            "offline-ui/pdv/infra/shell-bridge.js",
+            "offline-ui/pdv/infra/storage.js",
+            "offline-ui/pdv/shared/helpers/text-format.js",
+            "offline-ui/pdv/shared/values/ui-values.js",
+            "offline-ui/pdv/state/navigation-state.js",
+            "offline-ui/pdv/state/runtime-state.js",
+            "offline-ui/pdv/state/session-state.js",
+            "offline-ui/pdv/ui/components/company-header.js",
+            "offline-ui/pdv/ui/components/connectivity-indicator.js",
+            "offline-ui/pdv/ui/navigation/access-guard.js"
+        ],
+        "note": "O grafo mede apenas require CommonJS. Os dois módulos fiscais legados continuam sem consumidor CommonJS. Scripts browser P02-P18 são carregados por pdv.html como scripts clássicos same-origin e por isso não entram no reach dos roots CommonJS; scripts internos de iframe continuam inline quando a fronteira do frame exige isso."
+    },
+    "hotspots": [
+        {
+            "module": "main.js",
+            "fanOut": 53,
+            "fanIn": 0,
+            "totalDirectCoupling": 53,
+            "transitiveDependencies": 91,
+            "role": "orchestration-hub",
+            "reason": "Maior fan-out direto e maior alcance transitivo do grafo."
+        },
+        {
+            "module": "offline-db.js",
+            "fanOut": 24,
+            "fanIn": 13,
+            "totalDirectCoupling": 37,
+            "transitiveDependencies": 26,
+            "role": "persistence-facade",
+            "reason": "Fachada de persistência delegando para owners internos de conexão, migrations, transaction context, repositories/read-models D04-D13, outboxes e atomics de crediário/venda."
+        },
+        {
+            "module": "offline-fiscal-nfce-qrcode.js",
+            "fanOut": 4,
+            "fanIn": 3,
+            "totalDirectCoupling": 7,
+            "transitiveDependencies": 30,
+            "role": "fiscal-document-bridge",
+            "reason": "Maior acoplamento bidirecional entre os módulos de domínio fiscal."
+        },
+        {
+            "module": "offline-fiscal-sale-pipeline.js",
+            "fanOut": 5,
+            "fanIn": 1,
+            "totalDirectCoupling": 6,
+            "transitiveDependencies": 34,
+            "role": "fiscal-orchestrator",
+            "reason": "Coordena cinco colaboradores diretos e oito dependências transitivas."
+        },
+        {
+            "module": "offline-sale-service.js",
+            "fanOut": 4,
+            "fanIn": 1,
+            "totalDirectCoupling": 5,
+            "transitiveDependencies": 37,
+            "role": "application-to-fiscal-bridge",
+            "reason": "Conecta venda, persistência, identidade, valores e pipeline fiscal."
+        },
+        {
+            "module": "offline-device-auth.js",
+            "fanOut": 0,
+            "fanIn": 5,
+            "totalDirectCoupling": 5,
+            "role": "shared-identity-dependency",
+            "reason": "Compartilhado por entrypoints e serviços de aplicação."
+        },
+        {
+            "module": "offline-fiscal-certificate-store.js",
+            "fanOut": 0,
+            "fanIn": 5,
+            "totalDirectCoupling": 5,
+            "role": "shared-fiscal-credential-dependency",
+            "reason": "Compartilhado por provisionamento, QR, pipeline, transporte e signer."
+        }
+    ],
+    "topTransitiveDependencyCounts": [
+        {
+            "module": "main.js",
+            "count": 91
+        },
+        {
+            "module": "offline-sale-service.js",
+            "count": 37
+        },
+        {
+            "module": "offline-fiscal-runtime.js",
+            "count": 34
+        },
+        {
+            "module": "offline-fiscal-sale-pipeline.js",
+            "count": 34
+        },
+        {
+            "module": "offline-fiscal-contingency-service.js",
+            "count": 31
+        },
+        {
+            "module": "offline-fiscal-nfce-danfe.js",
+            "count": 31
+        },
+        {
+            "module": "offline-fiscal-outbox-worker.js",
+            "count": 31
+        }
+    ],
+    "sharedDependencies": [
+        {
+            "module": "offline-db.js",
+            "fanIn": 13,
+            "directDependents": [
+                "main.js",
+                "offline-cash-service.js",
+                "offline-fiscal-contingency-service.js",
+                "offline-fiscal-nfce-danfe.js",
+                "offline-fiscal-nfce-qrcode.js",
+                "offline-fiscal-number-maintenance.js",
+                "offline-fiscal-number-service.js",
+                "offline-fiscal-outbox-worker.js",
+                "offline-fiscal-sale-pipeline.js",
+                "offline-outbox-worker.js",
+                "offline-product-service.js",
+                "offline-sale-service.js",
+                "phase2-pair-device.js"
+            ]
+        },
+        {
+            "module": "offline-db/transaction.js",
+            "fanIn": 10,
+            "directDependents": [
+                "offline-db.js",
+                "offline-db/atomic/crediario.js",
+                "offline-db/atomic/sale.js",
+                "offline-db/migrations/versions/index.js",
+                "offline-db/outbox/fiscal-outbox.js",
+                "offline-db/outbox/sync-outbox.js",
+                "offline-db/repositories/cash.js",
+                "offline-db/repositories/fiscal-numbering.js",
+                "offline-db/repositories/sales.js",
+                "offline-db/repositories/stock.js"
+            ]
+        },
+        {
+            "module": "offline-device-auth.js",
+            "fanIn": 5,
+            "directDependents": [
+                "main.js",
+                "offline-cash-service.js",
+                "offline-product-service.js",
+                "offline-sale-service.js",
+                "phase2-pair-device.js"
+            ]
+        },
+        {
+            "module": "offline-fiscal-certificate-store.js",
+            "fanIn": 5,
+            "directDependents": [
+                "offline-fiscal-certificate-provisioning.js",
+                "offline-fiscal-nfce-qrcode.js",
+                "offline-fiscal-sale-pipeline.js",
+                "offline-fiscal-svrs-transport.js",
+                "offline-fiscal-xml-signer.js"
+            ]
+        }
+    ],
+    "largestLayerRelations": [
+        {
+            "from": "persistence",
+            "to": "persistence",
+            "edges": 50
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "identity-sync",
+            "edges": 6
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "offline-auth-session",
+            "edges": 4
+        },
+        {
+            "from": "fiscal-orchestration",
+            "to": "fiscal-document",
+            "edges": 4
+        },
+        {
+            "from": "application-services",
+            "to": "identity-sync",
+            "edges": 3
+        },
+        {
+            "from": "application-services",
+            "to": "persistence",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "application-services",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "desktop-windows",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "offline-runtime",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "offline-sync-coordination",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "printing",
+            "edges": 3
+        },
+        {
+            "from": "fiscal-document",
+            "to": "fiscal-credentials",
+            "edges": 3
+        },
+        {
+            "from": "fiscal-document",
+            "to": "persistence",
+            "edges": 3
+        },
+        {
+            "from": "fiscal-orchestration",
+            "to": "fiscal-orchestration",
+            "edges": 3
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "desktop-bootstrap",
+            "edges": 2
+        },
+        {
+            "from": "electron-entrypoints",
+            "to": "desktop-security",
+            "edges": 2
+        }
+    ],
+    "observations": [
+        "O grafo estático local é um DAG: não há ciclos de require entre os 213 módulos de produção.",
+        "main.js e offline-db.js formam os dois extremos de concentração: um concentra orquestração de saída, o outro dependentes de entrada.",
+        "offline-fiscal-nfce-qrcode.js é o principal módulo-ponte dentro do subgrafo fiscal documental.",
+        "offline-sale-service.js amplia seu acoplamento transitivo ao entrar no pipeline fiscal, alcançando 37 módulos abaixo dele.",
+        "offline-fiscal-number-maintenance.js e offline-fiscal-number-service.js formam uma ilha estática não alcançada pelas raízes executáveis atuais.",
+        "P02 adiciona três scripts clássicos do renderer carregados por HTML; eles aumentam nodes/SCC sem criar arestas require CommonJS nem ciclos.",
+        "P03 adiciona cinco adapters renderer carregados por HTML; nodes/SCC sobem para 92, enquanto as 134 arestas CommonJS, DAG e longest path permanecem inalterados.",
+        "P04 adiciona cinco scripts clássicos renderer (3 state owners + compat + bootstrap); nodes/SCC sobem para 97, enquanto as 134 arestas CommonJS, DAG e longest path permanecem inalterados.",
+        "P05 adiciona cinco scripts renderer (2 shared + 3 UI/navigation); nodes/SCC sobem para 102, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P06 adiciona dois scripts renderer de products/search/NCM; nodes/SCC sobem para 104, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P07 adiciona cinco scripts renderer de customer (owner + quatro controllers); nodes/SCC sobem para 109, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P08 adiciona quatro scripts renderer de suppliers/coordinator (owner, UI compartilhada, CRUD e coordenador); nodes/SCC sobem para 113, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P09 adiciona vinte scripts renderer de history (owner + controllers/views preservados no timing original); nodes/SCC sobem para 133, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P10 adiciona onze scripts renderer de inventory (owner + core, navegação top-level e dashboards); os dois scripts de teclado/foco dentro do template filho permanecem inline para preservar a fronteira P03. nodes/SCC sobem para 144, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado.",
+        "P11 adiciona treze scripts renderer de finance (owner + core/controllers/views); nodes/SCC sobem para 157, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. O script financeiro do template filho permanece inline e P12 cash não é iniciado.",
+        "P12 adiciona sete scripts renderer de cash (owner + core/receipt/views); nodes/SCC sobem para 164, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. O estado de movimentação do menu no iframe filho permanece inline para preservar P03 e P13 crediario não é iniciado.",
+        "P13 adiciona doze scripts renderer de crediario (owner + core/controllers/views); nodes/SCC sobem para 176, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. Estados de crediário do menu no iframe filho e a tabela unificada cross-domain permanecem inline; P14 sale/payment não é iniciado.",
+        "P14 adiciona quatorze scripts renderer de sale/payment (owner + sale/payment cores e controllers/views); nodes/SCC sobem para 190, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. Hooks de continuity e chamadas fiscais permanecem nos cores atuais para os cortes P15/P16; nenhum diretório futuro foi iniciado.",
+        "P15 adiciona dois scripts renderer de continuity (owner + adapter); nodes/SCC sobem para 192, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. Sale/payment registra ports no owner continuity; o restore de paymentContinuity passa a executar no payment-core, que possui lexicalmente paymentParts/selectedMethod/inputs, eliminando a referência cross-IIFE inválida sem alterar o contrato externo. P16 fiscal não é iniciado.",
+        "P16 adiciona quatro scripts renderer de fiscal (owner + receipt + dois rodapés); nodes/SCC sobem para 196, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. O receipt passa a consumir diretamente os owners P09 history e P14 sale/payment; superadmin P17 e bridges/drivers de printing P18 permanecem inline.",
+        "P17 adiciona quatorze scripts renderer top-level de superadmin/A1 (owner + treze controllers/views); nodes/SCC sobem para 210, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. O script SCF_SUPERADMIN_MENU_MODO do iframe filho permanece inline em __htmlStatusSrcdoc para não atravessar a fronteira do frame; bridges/drivers de printing permanecem inline para P18.",
+        "P18 adiciona três scripts renderer de printing (owner, controller V5 e view de reprint); nodes/SCC sobem para 213, arestas CommonJS permanecem 134, sem ciclos e com longest path inalterado. Oito patch layers renderer de impressão já supersedidos foram removidos, deixando um único executor V5 por comportamento; M10 main-process printing/ permanece intacto.",
+        "Etapa 10.1 E2E encontrou uma dependência eager renderer inválida: cash/receipt.js carregava antes de finance/domain.js e abortava no bootstrap ao exigir financeDomain no topo. O consumidor agora resolve finance de forma lazy no evento de movimento confirmado; a ordem física histórica dos scripts foi preservada. O grafo CommonJS permanece 213 nodes, 134 edges, 213 SCCs e DAG."
     ]
-  },
-  "entrypointReachability": {
-    "roots": [
-      "main.js",
-      "preload.js",
-      "phase2-pair-device.js"
-    ],
-    "transitiveReach": {
-      "main.js": 24,
-      "preload.js": 0,
-      "phase2-pair-device.js": 3
-    },
-    "combinedReachableIncludingRoots": 27,
-    "notReachableFromEntrypoints": [
-      "offline-fiscal-number-maintenance.js",
-      "offline-fiscal-number-service.js"
-    ],
-    "note": "Os dois módulos não possuem consumidor de produção no grafo CommonJS atual. Eles permanecem empacotados por offline-fiscal-*.js e são exercitados pela suíte de testes; a classificação não afirma que sejam código morto."
-  },
-  "hotspots": [
-    {
-      "module": "main.js",
-      "fanOut": 13,
-      "fanIn": 0,
-      "totalDirectCoupling": 13,
-      "transitiveDependencies": 24,
-      "role": "orchestration-hub",
-      "reason": "Maior fan-out direto e maior alcance transitivo do grafo."
-    },
-    {
-      "module": "offline-db.js",
-      "fanOut": 0,
-      "fanIn": 13,
-      "totalDirectCoupling": 13,
-      "role": "persistence-hub",
-      "reason": "Maior fan-in; mudanças na API de persistência afetam treze consumidores diretos."
-    },
-    {
-      "module": "offline-fiscal-nfce-qrcode.js",
-      "fanOut": 4,
-      "fanIn": 3,
-      "totalDirectCoupling": 7,
-      "transitiveDependencies": 4,
-      "role": "fiscal-document-bridge",
-      "reason": "Maior acoplamento bidirecional entre os módulos de domínio fiscal."
-    },
-    {
-      "module": "offline-fiscal-sale-pipeline.js",
-      "fanOut": 5,
-      "fanIn": 1,
-      "totalDirectCoupling": 6,
-      "transitiveDependencies": 8,
-      "role": "fiscal-orchestrator",
-      "reason": "Coordena cinco colaboradores diretos e oito dependências transitivas."
-    },
-    {
-      "module": "offline-sale-service.js",
-      "fanOut": 4,
-      "fanIn": 1,
-      "totalDirectCoupling": 5,
-      "transitiveDependencies": 11,
-      "role": "application-to-fiscal-bridge",
-      "reason": "Conecta venda, persistência, identidade, valores e pipeline fiscal."
-    },
-    {
-      "module": "offline-device-auth.js",
-      "fanOut": 0,
-      "fanIn": 5,
-      "totalDirectCoupling": 5,
-      "role": "shared-identity-dependency",
-      "reason": "Compartilhado por entrypoints e serviços de aplicação."
-    },
-    {
-      "module": "offline-fiscal-certificate-store.js",
-      "fanOut": 0,
-      "fanIn": 5,
-      "totalDirectCoupling": 5,
-      "role": "shared-fiscal-credential-dependency",
-      "reason": "Compartilhado por provisionamento, QR, pipeline, transporte e signer."
-    }
-  ],
-  "topTransitiveDependencyCounts": [
-    {
-      "module": "main.js",
-      "count": 24
-    },
-    {
-      "module": "offline-sale-service.js",
-      "count": 11
-    },
-    {
-      "module": "offline-fiscal-runtime.js",
-      "count": 8
-    },
-    {
-      "module": "offline-fiscal-sale-pipeline.js",
-      "count": 8
-    },
-    {
-      "module": "offline-fiscal-contingency-service.js",
-      "count": 5
-    },
-    {
-      "module": "offline-fiscal-nfce-danfe.js",
-      "count": 5
-    },
-    {
-      "module": "offline-fiscal-outbox-worker.js",
-      "count": 5
-    }
-  ],
-  "sharedDependencies": [
-    {
-      "module": "offline-db.js",
-      "fanIn": 13,
-      "directDependents": [
-        "main.js",
-        "offline-cash-service.js",
-        "offline-fiscal-contingency-service.js",
-        "offline-fiscal-nfce-danfe.js",
-        "offline-fiscal-nfce-qrcode.js",
-        "offline-fiscal-number-maintenance.js",
-        "offline-fiscal-number-service.js",
-        "offline-fiscal-outbox-worker.js",
-        "offline-fiscal-sale-pipeline.js",
-        "offline-outbox-worker.js",
-        "offline-product-service.js",
-        "offline-sale-service.js",
-        "phase2-pair-device.js"
-      ]
-    },
-    {
-      "module": "offline-device-auth.js",
-      "fanIn": 5,
-      "directDependents": [
-        "main.js",
-        "offline-cash-service.js",
-        "offline-product-service.js",
-        "offline-sale-service.js",
-        "phase2-pair-device.js"
-      ]
-    },
-    {
-      "module": "offline-fiscal-certificate-store.js",
-      "fanIn": 5,
-      "directDependents": [
-        "offline-fiscal-certificate-provisioning.js",
-        "offline-fiscal-nfce-qrcode.js",
-        "offline-fiscal-sale-pipeline.js",
-        "offline-fiscal-svrs-transport.js",
-        "offline-fiscal-xml-signer.js"
-      ]
-    },
-    {
-      "module": "offline-fiscal-nfce-qrcode.js",
-      "fanIn": 3,
-      "directDependents": [
-        "offline-fiscal-nfce-danfe.js",
-        "offline-fiscal-outbox-worker.js",
-        "offline-fiscal-sale-pipeline.js"
-      ]
-    }
-  ],
-  "largestLayerRelations": [
-    {
-      "from": "electron-entrypoints",
-      "to": "identity-sync",
-      "edges": 6
-    },
-    {
-      "from": "fiscal-orchestration",
-      "to": "fiscal-document",
-      "edges": 4
-    },
-    {
-      "from": "application-services",
-      "to": "identity-sync",
-      "edges": 3
-    },
-    {
-      "from": "application-services",
-      "to": "persistence",
-      "edges": 3
-    },
-    {
-      "from": "electron-entrypoints",
-      "to": "application-services",
-      "edges": 3
-    },
-    {
-      "from": "fiscal-document",
-      "to": "fiscal-credentials",
-      "edges": 3
-    },
-    {
-      "from": "fiscal-document",
-      "to": "persistence",
-      "edges": 3
-    }
-  ],
-  "observations": [
-    "O grafo estático local é um DAG: não há ciclos de require entre os 29 módulos de produção.",
-    "main.js e offline-db.js formam os dois extremos de concentração: um concentra orquestração de saída, o outro dependentes de entrada.",
-    "offline-fiscal-nfce-qrcode.js é o principal módulo-ponte dentro do subgrafo fiscal documental.",
-    "offline-sale-service.js amplia seu acoplamento transitivo ao entrar no pipeline fiscal, alcançando onze módulos abaixo dele.",
-    "offline-fiscal-number-maintenance.js e offline-fiscal-number-service.js formam uma ilha estática não alcançada pelas raízes executáveis atuais."
-  ]
 }

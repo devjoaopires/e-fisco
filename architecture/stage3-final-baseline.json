@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "official-stage3-baseline",
+  "scope": "Etapa 3/10 concluida - baseline oficial antes da Etapa 4",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e",
+    "workingTreeDirty": true,
+    "note": "O baseline oficial inclui as mudancas intencionais da Etapa 3 e preserva separadamente as mudancas preexistentes de CI/code-signing."
+  },
+  "toolchain": {
+    "node": "24.18.1",
+    "npm": "11.16.0",
+    "electron": "43.4.1",
+    "dependencyInstall": "npm ci --no-audit --no-fund"
+  },
+  "officialTestCounts": {
+    "test:ci": {
+      "tests": 18,
+      "passed": 18,
+      "failed": 0
+    },
+    "test:unit": {
+      "tests": 186,
+      "passed": 186,
+      "failed": 0
+    },
+    "test:electron-security": {
+      "tests": 58,
+      "passed": 58,
+      "failed": 0
+    },
+    "test:integration": {
+      "tests": 59,
+      "passed": 59,
+      "failed": 0
+    },
+    "test:db": {
+      "tests": 22,
+      "passed": 22,
+      "failed": 0
+    },
+    "test:fiscal": {
+      "tests": 28,
+      "passed": 28,
+      "failed": 0
+    },
+    "test:architecture": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "phase1:selftest": "OK",
+    "phase2:db-selftest": "OK",
+    "npm test": {
+      "tests": 245,
+      "passed": 245,
+      "failed": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "productionSyntax": {
+    "files": 29,
+    "passed": 29,
+    "failed": 0,
+    "inventory": "recursive production JavaScript inventory used by architecture gate"
+  },
+  "stage3SafetyGates": {
+    "architecture": [
+      "recursive production JS inventory",
+      "path-aware CommonJS graph",
+      "node:sqlite owner transition",
+      "raw SQL debt monotonic decrease",
+      "offline-db deep-import boundary",
+      "packaging coverage via build.files",
+      "dynamic architecture artifact alignment"
+    ],
+    "saleStock": [
+      "backend revalidation inside BEGIN IMMEDIATE",
+      "pending local stock deltas included",
+      "same-product lines aggregated before validation",
+      "oversell aborts before sale persistence"
+    ],
+    "continuityFailoverRecovery": [
+      "continuity snapshot/restore contract",
+      "3 consecutive failures for normal failover",
+      "3 consecutive successes for recovery",
+      "active sale blocks recovery",
+      "active outbox blocks recovery",
+      "invalid sync identity/auth blocks recovery",
+      "tenant mismatch blocks recovery",
+      "remote NFC-e counter behind local blocks recovery"
+    ],
+    "bridgesAndServer": [
+      "SCF shell protocol frozen at 45 literal names",
+      "shell message source/origin guard",
+      "printing requestId deduplication for 60 seconds",
+      "trusted WebFrameMain for privileged console markers",
+      "one-shot pending print payload",
+      "offline server loopback/GET-HEAD/allowlist/MIME/traversal fail-closed"
+    ]
+  },
+  "productionChangeIntroducedDuringStage3": {
+    "file": "offline-db.js",
+    "reason": "O red test do Passo 3.5 confirmou oversell real na venda normal.",
+    "change": "registerOfflineSaleAtomic revalida estoque dentro do BEGIN IMMEDIATE antes do primeiro INSERT da venda.",
+    "validation": "Coberto por 3 testes dedicados e pela suite completa 245/245."
+  },
+  "testFixtureCompatibilityChange": {
+    "file": "phase2-db-selftest.js",
+    "reason": "Semear produto ativo para o self-test fiscal continuar alcançando o erro original de lease ausente apos a nova pre-condicao de estoque."
+  },
+  "ciToolingFix": {
+    "file": "ci/local-ci.ps1",
+    "observedFailure": "Ensure-PortableNode emitia diagnosticos e caminho pelo output do PowerShell; atribuicao direta podia produzir uma colecao em $npmPath.",
+    "fix": "$npmPath = @(Ensure-PortableNode -Version $NodeVersion)[-1]",
+    "result": "LOCAL_CI=OK em execucao completa subsequente."
+  },
+  "pipelineMetadataReconciled": {
+    "ci-contract": 18,
+    "unit": 186,
+    "integration": 59,
+    "db": 22,
+    "fiscal": 28,
+    "architecture": 12,
+    "full-suite": 245
+  },
+  "freshLocalPipeline": {
+    "status": "OK",
+    "npmCi": "OK",
+    "tests": "OK",
+    "freshBuild": true,
+    "target": "windows-nsis-x64",
+    "publish": false,
+    "remoteUpload": false,
+    "releaseValidation": "OK",
+    "codeSigningInventory": "OK",
+    "installer": {
+      "path": "dist/e-fisco-Setup-1.0.41.exe",
+      "bytes": 107141006,
+      "sha512Base64": "ZlUrGXi+A0FLCJ1VYAC9TE1touqLVbpXF4k8Kr97ivXyu1m4tSNAIOD/RS6ESGzw0Z2EAsHMNzrOKAzrsNTlsg=="
+    },
+    "asarUnpackFiles": 2,
+    "packageLockUnchanged": true
+  },
+  "nonBlockingWarnings": [
+    "npm deprecated: inflight@1.0.6",
+    "npm deprecated: lodash.isequal@4.5.0",
+    "npm deprecated: rimraf@2.6.3",
+    "npm deprecated: glob@7.2.3",
+    "npm deprecated: boolean@3.2.0",
+    "npm allow-scripts pending: electron-winstaller@5.4.0; fresh NSIS build and release validation completed successfully despite the warning"
+  ],
+  "acceptanceRuleForStage4": {
+    "baselineGreen": true,
+    "readyForM01": true,
+    "rules": [
+      "Qualquer lote M01-M14 deve manter ou aumentar cobertura; reducao exige justificativa explicita.",
+      "Uma suite previamente verde que falhar depois de um lote bloqueia o lote ate diagnostico.",
+      "Os hashes dos arquivos preexistentes de CI/code-signing nao podem mudar por acidente.",
+      "package-lock.json nao pode mudar sem tarefa explicita de dependencia.",
+      "Novas roots backend devem entrar em package.json build.files no mesmo lote que cria seu primeiro modulo.",
+      "Nenhuma renomeacao de IPC, SCF, Storage ou exports DB ocorre durante a extracao inicial."
+    ]
+  },
+  "nextStep": "Etapa 4/10 - M01: extrair navigation helpers/policy para desktop/security/navigation-policy.js com wrapper/cutover reversivel."
+}

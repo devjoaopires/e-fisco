@@ -1,0 +1,116 @@
+{
+  "stage": "5.4/5",
+  "capturedAt": "2026-09-28",
+  "releaseVersion": "1.0.42",
+  "status": "QA_READY_UNSIGNED_PUBLIC_RELEASE_BLOCKED",
+  "preBuildValidation": {
+    "targetedContracts": {
+      "tests": 58,
+      "passed": 58,
+      "failed": 0
+    },
+    "fullUnitIntegration": {
+      "tests": 594,
+      "passed": 594,
+      "failed": 0
+    },
+    "scale": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "resilience": {
+      "tests": 8,
+      "passed": 8,
+      "failed": 0
+    }
+  },
+  "versionAlignment": {
+    "packageJson": "1.0.42",
+    "packageLockRoot": "1.0.42",
+    "packageLockPackageRoot": "1.0.42",
+    "preloadBridge": "1.0.42",
+    "nfceProcessVersion": "e-fisco-1.0.42",
+    "architectureSnapshots": "1.0.42",
+    "ciPipelineContract": "1.0.42"
+  },
+  "build": {
+    "electronBuilderVersion": "26.15.3",
+    "electronVersion": "43.4.1",
+    "target": "nsis",
+    "arch": "x64",
+    "asar": true,
+    "installer": "dist/e-fisco-Setup-1.0.42.exe",
+    "installerBytes": 107188111,
+    "installerSha256": "4D4938B7B12C804561E6815C32FEED945DEE8F28EBEB2D4043EB8E206782CBB0",
+    "installerSha512": "utPJllqHIoKTCCOAAni/i2S5/veE1QNou055Ruhu3lm1jELBhuY+oTQPcV/iAqFpztFfezM/ojZFW2GwLLRxwA==",
+    "applicationExeSha256": "FC9142A6802AE3586A325CB4927AB26133850F272E2440118BE54050F1C5B9CE",
+    "packageLockSha256": "CB7A2B3959BFC9F04478A45F6A6E97947A3D3AB98780E45D842A01218D8A1FA6",
+    "releaseValidator": "OK"
+  },
+  "asarAudit": {
+    "fileCount": 726,
+    "packageVersion": "1.0.42",
+    "requiredMissing": 0,
+    "sourcePackedHashMatch": {
+      "main.js": true,
+      "preload.js": true,
+      "offline/telemetry/queue.js": true,
+      "offline/diagnostics/codes.js": true
+    },
+    "backupFiles": 0,
+    "testFiles": 0,
+    "architectureFiles": 0,
+    "envFiles": 0,
+    "durableQueueRecoveryPresent": true
+  },
+  "installerSmoke": {
+    "cleanInstall": {
+      "exeVersion": "1.0.42",
+      "asarVersion": "1.0.42",
+      "uninstallExit": 0
+    },
+    "upgrade": {
+      "fromExeVersion": "1.0.41",
+      "fromAsarVersion": "1.0.41",
+      "toExeVersion": "1.0.42",
+      "toAsarVersion": "1.0.42",
+      "uninstallerPresent": true
+    },
+    "temporaryInstallDirectoryRemoved": true,
+    "previousUninstallRegistryStateRestored": true
+  },
+  "rollbackArtifact": {
+    "installer": "dist.pre-pass5.4-1.0.41/e-fisco-Setup-1.0.41.exe",
+    "bytes": 145903326,
+    "sha256": "E6C1FE7FEDD7F03916EF4CD52064874220037335CA47CDBE4940FF28226096A3"
+  },
+  "codeSigning": {
+    "policyRequiresSignedOwnBinaries": true,
+    "certificateStatus": "PENDING",
+    "certificateFound": false,
+    "reason": "certificate-not-issued-or-not-loaded",
+    "signingOperation": "PENDING",
+    "missing": [
+      "signtool",
+      "thumbprint"
+    ],
+    "installerSignature": "NotSigned",
+    "applicationSignature": "NotSigned",
+    "updaterSourceSignature": "NotSigned",
+    "updaterPackagedSignature": "NotSigned",
+    "updaterSourceSha256": "0AED0700A231546BF9BEA46C6BF37893CD03CD7D2956F5A2167BD822198E9454",
+    "updaterPackagedSha256": "0AED0700A231546BF9BEA46C6BF37893CD03CD7D2956F5A2167BD822198E9454",
+    "updaterContentMatches": true,
+    "publicReleaseBlocked": true
+  },
+  "acceptance": {
+    "buildGenerated": true,
+    "releaseValidatorGreen": true,
+    "asarClean": true,
+    "cleanInstallGreen": true,
+    "upgradeGreen": true,
+    "rollbackArtifactPreserved": true,
+    "publicDistributionApproved": false
+  }
+}

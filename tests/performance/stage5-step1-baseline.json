@@ -1,0 +1,81 @@
+{
+  "stage": "5.1/5",
+  "capturedAt": "2026-09-28",
+  "desktop": {
+    "productionQueueLimit": 100,
+    "queue100": {
+      "enqueueMs": 400,
+      "reloadMs": 27,
+      "drainMs": 9,
+      "serializedBytes": 326485,
+      "networkBatchesAt25": 4
+    },
+    "coalescence": {
+      "updates": 1000,
+      "pendingItemsAfter": 1,
+      "durationMs": 4300
+    },
+    "concurrentFlush": {
+      "callers": 20,
+      "events": 100,
+      "networkBatches": 4,
+      "durationMs": 83
+    }
+  },
+  "server": {
+    "endpoint": "/sync/device/telemetry",
+    "profileStandard": {
+      "devices": 20,
+      "eventsPerDevice": 20,
+      "uniqueEvents": 400,
+      "duplicateEvents": 200,
+      "requests": 60,
+      "concurrency": 8,
+      "httpErrors": 0,
+      "rejected": 0,
+      "throughputUniqueEventsPerSecond": 118.67,
+      "latencyMs": {
+        "p50": 287,
+        "p95": 1571,
+        "max": 1730
+      },
+      "supportQueryMs": 7
+    },
+    "profileHeavy": {
+      "devices": 50,
+      "eventsPerDevice": 25,
+      "uniqueEvents": 1250,
+      "duplicateEvents": 1250,
+      "requests": 100,
+      "concurrency": 12,
+      "httpErrors": 0,
+      "rejected": 0,
+      "throughputUniqueEventsPerSecond": 155.07,
+      "latencyMs": {
+        "p50": 886,
+        "p95": 1581,
+        "max": 2188
+      },
+      "supportQueryMs": 16,
+      "pm2": {
+        "pidStable": true,
+        "restartCountStable": true,
+        "memoryBytesBefore": 96698368,
+        "memoryBytesSettledAfter5s": 125763584,
+        "cpuPercentSettledAfter5s": 0.3
+      }
+    },
+    "cleanup": {
+      "temporaryDevicesRemaining": 0,
+      "temporaryEventsRemaining": 0
+    }
+  },
+  "acceptance": {
+    "desktopScaleTestsPassed": true,
+    "serverHttpErrors": 0,
+    "serverRejectedEvents": 0,
+    "serverP95UnderMs": 5000,
+    "supportQueryUnderMs": 5000,
+    "noTemporaryDataRemaining": true
+  }
+}

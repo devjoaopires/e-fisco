@@ -1,230 +1,1430 @@
 {
-  "schemaVersion": 1,
-  "release": "1.0.41",
-  "sourceMap": "architecture/module-responsibilities.json",
-  "sourceDependencyAnalysis": "architecture/dependency-analysis.json",
-  "scope": "runtime-boundaries-db-services-fiscal-sync-ui",
-  "boundaries": [
-    {
-      "id": "sqlite-ownership",
-      "owner": "offline-db.js",
-      "contract": "Somente offline-db.js importa node:sqlite, inicializa/fecha o banco, executa migrations e controla o singleton SQLite.",
-      "status": "enforced-by-current-code",
-      "evidence": {
-        "nodeSqliteImporters": [
-          "offline-db.js"
-        ],
-        "count": 1
-      }
-    },
-    {
-      "id": "raw-sql-access",
-      "owner": "offline-db.js",
-      "contract": "Estado desejado: módulos fora de offline-db.js devem consumir operações persistentes pela API pública de domínio, sem conhecer SQL/tabelas.",
-      "status": "boundary-debt",
-      "currentExceptions": [
-        {
-          "module": "offline-cash-service.js",
-          "prepareCalls": 5,
-          "classification": "application-service-schema-coupling"
-        },
-        {
-          "module": "offline-device-auth.js",
-          "prepareCalls": 2,
-          "classification": "identity-config-schema-coupling",
-          "scope": "local_config"
-        },
-        {
-          "module": "offline-fiscal-number-maintenance.js",
-          "prepareCalls": 3,
-          "classification": "fiscal-numbering-config-schema-coupling",
-          "scope": "local_config"
-        },
-        {
-          "module": "offline-sale-service.js",
-          "prepareCalls": 2,
-          "classification": "application-service-schema-coupling",
-          "scope": "finance sales read model"
-        }
-      ],
-      "totalPrepareCallsOutsideOwner": 12,
-      "candidateForStep74": false,
-      "step74Result": {
-        "mainPrepareCallsBefore": 8,
-        "mainPrepareCallsAfter": 0,
-        "outsideOwnerPrepareCallsBefore": 20,
-        "outsideOwnerPrepareCallsAfter": 12,
-        "outsideOwnerModulesBefore": 5,
-        "outsideOwnerModulesAfter": 4
-      }
-    },
-    {
-      "id": "application-service-to-persistence",
-      "owner": "application-services",
-      "contract": "Serviços de produto, caixa e venda podem depender de contratos de offline-db.js; não devem abrir SQLite nem assumir schema quando houver operação de domínio equivalente.",
-      "status": "partially-respected",
-      "notes": [
-        "offline-product-service.js usa APIs públicas e não contém SQL bruto.",
-        "offline-cash-service.js e offline-sale-service.js ainda possuem SQL bruto e fazem parte da dívida raw-sql-access."
-      ]
-    },
-    {
-      "id": "sale-to-fiscal",
-      "owner": "offline-sale-service.js",
-      "contract": "Venda entra no domínio fiscal somente por offline-fiscal-sale-pipeline.js; módulos documentais/transportes fiscais não devem ser chamados diretamente pelo renderer.",
-      "status": "respected-by-static-graph",
-      "evidence": [
-        "offline-sale-service.js -> offline-fiscal-sale-pipeline.js",
-        "UI -> preload -> main -> offline-sale-service.js"
-      ]
-    },
-    {
-      "id": "fiscal-document-vs-transport",
-      "owner": "fiscal-document",
-      "contract": "XML, assinatura, QR e DANFE não enviam SOAP; transmissão/reconciliação pertencem a runtime/worker/SVRS transport.",
-      "status": "respected-by-static-graph",
-      "documentModules": [
-        "offline-fiscal-contingency-service.js",
-        "offline-fiscal-nfce-xml.js",
-        "offline-fiscal-nfce-qrcode.js",
-        "offline-fiscal-nfce-danfe.js",
-        "offline-fiscal-xml-signer.js"
-      ],
-      "transportModules": [
-        "offline-fiscal-outbox-worker.js",
-        "offline-fiscal-runtime.js",
-        "offline-fiscal-svrs-transport.js"
-      ]
-    },
-    {
-      "id": "general-outbox-vs-transport",
-      "owner": "offline-outbox-worker.js",
-      "contract": "A máquina de estados da outbox geral recebe transporte pelo chamador; não importa offline-sync-http-transport.js diretamente.",
-      "status": "respected-by-static-graph"
-    },
-    {
-      "id": "sync-http-transport",
-      "owner": "offline-sync-http-transport.js",
-      "contract": "Operações autenticadas de sync/API e-fisco usam o transporte dedicado.",
-      "status": "respected-with-explicit-network-exceptions",
-      "networkCoreImporters": [
-        {
-          "module": "main.js",
-          "purpose": "HEAD probe de disponibilidade do Wix"
-        },
-        {
-          "module": "offline-device-pairing.js",
-          "purpose": "pareamento dedicado"
-        },
-        {
-          "module": "offline-fiscal-svrs-transport.js",
-          "purpose": "SOAP fiscal dedicado"
-        },
-        {
-          "module": "offline-standby.js",
-          "purpose": "download de manifesto/pacote standby"
-        },
-        {
-          "module": "offline-sync-http-transport.js",
-          "purpose": "API e-fisco/sync"
-        },
-        {
-          "module": "offline-ui-server.js",
-          "purpose": "HTTP loopback local, não rede externa"
-        }
-      ]
-    },
-    {
-      "id": "renderer-to-privileged-runtime",
-      "owner": "preload.js",
-      "contract": "Renderer não usa Node/IPC diretamente; capacidades privilegiadas são expostas por contextBridge e tratadas no main.",
-      "status": "respected",
-      "electronIsolation": {
-        "contextIsolation": true,
-        "nodeIntegration": false,
-        "sandbox": true
-      },
-      "uiEvidence": {
-        "requireCalls": 0,
-        "ipcRendererReferences": 0,
-        "efiscoDesktopReferences": 44
-      }
-    },
-    {
-      "id": "preload-to-main-ipc",
-      "owner": "preload.js + main.js",
-      "contract": "Todo canal IPC usado pelo preload possui registro correspondente no main e não existem registros do conjunto analisado sem exposição correspondente.",
-      "status": "respected",
-      "preloadChannels": 22,
-      "mainRegisteredChannels": 22,
-      "preloadWithoutMain": 0,
-      "mainWithoutPreload": 0,
-      "mainRegistrationForms": [
-        "ipcMain.handle/ipcMain.on",
-        "instalarOfflineHandler"
-      ]
-    },
-    {
-      "id": "renderer-network",
-      "owner": "offline-ui",
-      "contract": "Acesso privilegiado continua proibido; rede do navegador é uma fronteira separada e deve ser explícita.",
-      "status": "explicit-exceptions",
-      "fetchCalls": 2,
-      "exceptions": [
-        {
-          "purpose": "sonda de conectividade",
-          "target": "https://www.gstatic.com/generate_204"
-        },
-        {
-          "purpose": "carregamento de nomenclatura/NCM oficial",
-          "target": "URL oficial configurada em pdv.html"
-        }
-      ]
-    },
-    {
-      "id": "offline-ui-loopback",
-      "owner": "offline-ui-server.js",
-      "contract": "Arquivos da UI offline são servidos por HTTP loopback; o servidor local não pertence ao transporte externo de sync.",
-      "status": "respected"
-    }
-  ],
-  "step74Extraction": {
-    "focus": "remove-raw-sql-from-main",
-    "status": "completed",
-    "newOfflineDbApis": [
-      "getOutboxStatusSummary",
-      "listAuthorizedNfcePendingSync"
-    ],
-    "reusedOfflineDbApis": [
-      "listCashMovements",
-      "listActiveProvisionedOfflineCredentials",
-      "listPreparedOfflineCompanies",
-      "enqueueOutboxOperation"
-    ],
-    "effects": [
-      "finance snapshot deixa de consultar cash_movements diretamente no main",
-      "outboxStatusSummary deixa de consultar sync_outbox diretamente no main",
-      "enqueueAuthorizedNfceResultSync deixa de conhecer nfce_documents/fiscal_outbox/sync_outbox",
-      "resolução de empresa do operador deixa de conhecer offline_provisioned_credentials/offline_prepared_companies"
-    ]
-  },
-  "remainingCandidates": [
-    {
-      "priority": 1,
-      "candidate": "move-finance-read-model-to-service-or-db-api",
-      "reason": "O read model financeiro ainda é composto entre main.js, offline-sale-service.js e offline-cash-service.js, embora o main já não conheça SQL."
-    },
-    {
-      "priority": 2,
-      "candidate": "encapsulate-local-config",
-      "reason": "offline-device-auth.js e offline-fiscal-number-maintenance.js ainda duplicam acesso SQL à tabela local_config."
-    }
-  ],
-  "observations": [
-    "A fronteira de abertura do SQLite está forte: somente offline-db.js importa node:sqlite.",
-    "A extração do 7.4 removeu todo SQL bruto do main.js; ainda existem doze prepare() fora do kernel em quatro módulos.",
-    "A fronteira renderer/privilegiado está forte no modo Electron atual: isolamento, sandbox e bridge explícito.",
-    "A fronteira fiscal documento/transporte está separada no grafo estático.",
-    "O transporte de sync é dedicado, com exceções de rede de propósito diferente explicitamente identificadas."
-  ]
+    "schemaVersion":  1,
+    "release": "1.0.44",
+    "sourceMap":  "architecture/module-responsibilities.json",
+    "sourceDependencyAnalysis":  "architecture/dependency-analysis.json",
+    "scope":  "runtime-boundaries-db-services-fiscal-sync-ui",
+    "boundaries":  [
+                       {
+                           "id":  "sqlite-ownership",
+                           "owner":  "offline-db/connection.js",
+                           "contract":  "Somente offline-db/connection.js importa node:sqlite e controla DatabaseSync/databasePath/singleton, abertura, close/reopen e PRAGMAs.",
+                           "status":  "enforced-by-current-code",
+                           "evidence":  {
+                                            "nodeSqliteImporters":  [
+                                                                        "offline-db/connection.js"
+                                                                    ],
+                                            "count":  1
+                                        }
+                       },
+                       {
+                           "id":  "raw-sql-access",
+                           "owner":  "offline-db/**",
+                           "contract":  "SQL/tabelas pertencem ao boundary interno offline-db/**; consumidores externos devem usar APIs de domínio ou adapters já injetados, sem deep-import dos internals.",
+                           "status":  "enforced-by-current-code",
+                           "currentExceptions":  [
+
+                                                 ],
+                           "totalPrepareCallsOutsideOwner":  0,
+                           "candidateForStep74":  false,
+                           "step74Result":  {
+                                                "mainPrepareCallsBefore":  8,
+                                                "mainPrepareCallsAfter":  0,
+                                                "outsideOwnerPrepareCallsBefore":  20,
+                                                "outsideOwnerPrepareCallsAfter":  12,
+                                                "outsideOwnerModulesBefore":  5,
+                                                "outsideOwnerModulesAfter":  4
+                                            },
+                           "d04Result":  {
+                                             "offlineDeviceAuthPrepareCallsBefore":  2,
+                                             "offlineDeviceAuthPrepareCallsAfter":  0,
+                                             "localConfigOwner":  "offline-db/repositories/local-config.js",
+                                             "externalPrepareCallsBefore":  12,
+                                             "externalPrepareCallsAfter":  10,
+                                             "externalModulesBefore":  4,
+                                             "externalModulesAfter":  3
+                                         },
+                           "d06Result":  {
+                                             "offlineSaleServicePrepareCallsBefore":  2,
+                                             "offlineSaleServicePrepareCallsAfter":  0,
+                                             "financeReadModelOwner":  "offline-db/read-models/finance.js",
+                                             "externalPrepareCallsBefore":  10,
+                                             "externalPrepareCallsAfter":  8,
+                                             "externalModulesBefore":  3,
+                                             "externalModulesAfter":  2
+                                         },
+                           "d07Result":  {
+                                             "syncOutboxOwner":  "offline-db/outbox/sync-outbox.js",
+                                             "outboxStatusReadModelOwner":  "offline-db/read-models/outbox-status.js",
+                                             "genericLifecycleMoved":  [
+                                                                           "getOutboxOperation",
+                                                                           "enqueueOutboxOperation",
+                                                                           "listOutboxReady",
+                                                                           "claimOutboxOperation",
+                                                                           "markOutboxRetry",
+                                                                           "markOutboxConfirmed",
+                                                                           "markOutboxConflict",
+                                                                           "markOutboxManualReview",
+                                                                           "recoverStaleOutbox"
+                                                                       ],
+                                             "externalPrepareCallsBefore":  8,
+                                             "externalPrepareCallsAfter":  8,
+                                             "externalModulesBefore":  2,
+                                             "externalModulesAfter":  2,
+                                             "stage76Validation":  {
+                                                                       "claimDependencyBarrier":  "claimOutboxOperation requires every dependency to exist and be CONFIRMED",
+                                                                       "readyAndClaimUseSameDependencyBarrier":  true,
+                                                                       "syncFiscalSeparationPreserved":  true
+                                                                   }
+                                         },
+                           "d08Result":  {
+                                             "cashRepositoryOwner":  "offline-db/repositories/cash.js",
+                                             "financeRepositoryOwner":  "offline-db/repositories/finance.js",
+                                             "cashReadModelOwner":  "offline-db/read-models/cash.js",
+                                             "offlineCashServicePrepareCallsBefore":  5,
+                                             "offlineCashServicePrepareCallsAfter":  0,
+                                             "offlineCashServiceRawTransactionCommandsBefore":  9,
+                                             "offlineCashServiceRawTransactionCommandsAfter":  0,
+                                             "externalPrepareCallsBefore":  8,
+                                             "externalPrepareCallsAfter":  3,
+                                             "externalModulesBefore":  2,
+                                             "externalModulesAfter":  1
+                                         },
+                           "d09Result":  {
+                                             "fiscalProfileOwner":  "offline-db/repositories/fiscal-profile.js",
+                                             "fiscalReadModelOwner":  "offline-db/read-models/fiscal.js",
+                                             "fiscalOutboxOwner":  "offline-db/outbox/fiscal-outbox.js",
+                                             "externalPrepareCallsBefore":  3,
+                                             "externalPrepareCallsAfter":  3,
+                                             "externalModulesBefore":  1,
+                                             "externalModulesAfter":  1,
+                                             "remaining":  {
+                                                               "offline-fiscal-number-maintenance.js":  3
+                                                           }
+                                         },
+                           "d10Result":  {
+                                             "stockRepositoryOwner":  "offline-db/repositories/stock.js",
+                                             "externalPrepareCallsBefore":  3,
+                                             "externalPrepareCallsAfter":  3,
+                                             "externalModulesBefore":  1,
+                                             "externalModulesAfter":  1,
+                                             "remaining":  {
+                                                               "offline-fiscal-number-maintenance.js":  3
+                                                           }
+                                         },
+                           "d11Result":  {
+                                             "fiscalNumberingOwner":  "offline-db/repositories/fiscal-numbering.js",
+                                             "localConfigOwner":  "offline-db/repositories/local-config.js",
+                                             "offlineFiscalNumberMaintenancePrepareCallsBefore":  3,
+                                             "offlineFiscalNumberMaintenancePrepareCallsAfter":  0,
+                                             "externalPrepareCallsBefore":  3,
+                                             "externalPrepareCallsAfter":  0,
+                                             "externalModulesBefore":  1,
+                                             "externalModulesAfter":  0
+                                         },
+                           "d12Result":  {
+                                             "crediarioRepositoryOwner":  "offline-db/repositories/crediario.js",
+                                             "crediarioReadModelOwner":  "offline-db/read-models/crediario.js",
+                                             "crediarioAtomicOwner":  "offline-db/atomic/crediario.js",
+                                             "externalPrepareCallsBefore":  0,
+                                             "externalPrepareCallsAfter":  0,
+                                             "externalModulesBefore":  0,
+                                             "externalModulesAfter":  0
+                                         },
+                           "d13Result":  {
+                                             "salesRepositoryOwner":  "offline-db/repositories/sales.js",
+                                             "saleAtomicOwner":  "offline-db/atomic/sale.js",
+                                             "externalPrepareCallsBefore":  0,
+                                             "externalPrepareCallsAfter":  0,
+                                             "externalModulesBefore":  0,
+                                             "externalModulesAfter":  0
+                                         }
+                       },
+                       {
+                           "id":  "application-service-to-persistence",
+                           "owner":  "application-services",
+                           "contract":  "Serviços de produto, caixa e venda podem depender de contratos de offline-db.js; não devem abrir SQLite nem assumir schema quando houver operação de domínio equivalente.",
+                           "status":  "respected",
+                           "notes":  [
+                                         "offline-product-service.js usa APIs públicas e não contém SQL bruto.",
+                                         "offline-sale-service.js usa o finance read-model anexado à conexão e não contém SQL bruto.",
+                                         "offline-cash-service.js passou a usar facade/adapters anexados em D08 e não contém prepare() nem comandos transacionais SQL.",
+                                         "offline-fiscal-number-maintenance.js usa o adapter local_config anexado à conexão e não contém SQL bruto após D11."
+                                     ]
+                       },
+                       {
+                           "id":  "sale-to-fiscal",
+                           "owner":  "offline-sale-service.js",
+                           "contract":  "Venda entra no domínio fiscal somente por offline-fiscal-sale-pipeline.js; módulos documentais/transportes fiscais não devem ser chamados diretamente pelo renderer.",
+                           "status":  "respected-by-static-graph",
+                           "evidence":  [
+                                            "offline-sale-service.js -\u003e offline-fiscal-sale-pipeline.js",
+                                            "UI -\u003e preload -\u003e main -\u003e offline-sale-service.js"
+                                        ]
+                       },
+                       {
+                           "id":  "fiscal-document-vs-transport",
+                           "owner":  "fiscal-document",
+                           "contract":  "XML, assinatura, QR e DANFE não enviam SOAP; transmissão/reconciliação pertencem a runtime/worker/SVRS transport.",
+                           "status":  "respected-by-static-graph-and-db-boundary",
+                           "documentModules":  [
+                                                   "offline-fiscal-contingency-service.js",
+                                                   "offline-fiscal-nfce-xml.js",
+                                                   "offline-fiscal-nfce-qrcode.js",
+                                                   "offline-fiscal-nfce-danfe.js",
+                                                   "offline-fiscal-xml-signer.js"
+                                               ],
+                           "transportModules":  [
+                                                    "offline-fiscal-outbox-worker.js",
+                                                    "offline-fiscal-runtime.js",
+                                                    "offline-fiscal-svrs-transport.js"
+                                                ],
+                           "persistenceOutboxOwner":  "offline-db/outbox/fiscal-outbox.js",
+                           "fiscalProfileOwner":  "offline-db/repositories/fiscal-profile.js",
+                           "fiscalReadModelOwner":  "offline-db/read-models/fiscal.js"
+                       },
+                       {
+                           "id":  "general-outbox-vs-transport",
+                           "owner":  "offline-outbox-worker.js",
+                           "contract":  "A máquina de estados da outbox geral recebe transporte pelo chamador; não importa offline-sync-http-transport.js diretamente.",
+                           "status":  "respected-by-static-graph-and-db-boundary",
+                           "persistenceOwner":  "offline-db/outbox/sync-outbox.js",
+                           "statusReadModelOwner":  "offline-db/read-models/outbox-status.js"
+                       },
+                       {
+                           "id":  "sync-http-transport",
+                           "owner":  "offline-sync-http-transport.js",
+                           "contract":  "Operações autenticadas de sync/API e-fisco usam o transporte dedicado.",
+                           "status":  "respected-with-explicit-network-exceptions",
+                           "networkCoreImporters":  [
+                                                        {
+                                                            "module":  "main.js",
+                                                            "purpose":  "HEAD probe de disponibilidade do Wix"
+                                                        },
+                                                        {
+                                                            "module":  "offline-device-pairing.js",
+                                                            "purpose":  "pareamento dedicado"
+                                                        },
+                                                        {
+                                                            "module":  "offline-fiscal-svrs-transport.js",
+                                                            "purpose":  "SOAP fiscal dedicado"
+                                                        },
+                                                        {
+                                                            "module":  "offline-standby.js",
+                                                            "purpose":  "download de manifesto/pacote standby"
+                                                        },
+                                                        {
+                                                            "module":  "offline-sync-http-transport.js",
+                                                            "purpose":  "API e-fisco/sync"
+                                                        },
+                                                        {
+                                                            "module":  "offline-ui-server.js",
+                                                            "purpose":  "HTTP loopback local, não rede externa"
+                                                        }
+                                                    ]
+                       },
+                       {
+                           "id":  "renderer-to-privileged-runtime",
+                           "owner":  "preload.js",
+                           "contract":  "Renderer não usa Node/IPC diretamente; capacidades privilegiadas são expostas por contextBridge e tratadas no main.",
+                           "status":  "respected",
+                           "electronIsolation":  {
+                                                     "contextIsolation":  true,
+                                                     "nodeIntegration":  false,
+                                                     "sandbox":  true
+                                                 },
+                           "uiEvidence":  {
+                                              "requireCalls":  0,
+                                              "ipcRendererReferences":  0,
+                                              "efiscoDesktopReferences":  44
+                                          }
+                       },
+                       {
+                           "id":  "preload-to-main-ipc",
+                           "owner":  "preload.js + main.js",
+                           "contract":  "Todo canal IPC usado pelo preload possui registro correspondente no main e não existem registros do conjunto analisado sem exposição correspondente.",
+                           "status":  "respected",
+                           "preloadChannels":  25,
+                           "mainRegisteredChannels":  25,
+                           "preloadWithoutMain":  0,
+                           "mainWithoutPreload":  0,
+                           "mainRegistrationForms":  [
+                                                         "ipcMain.handle/ipcMain.on",
+                                                         "instalarOfflineHandler"
+                                                     ]
+                       },
+                       {
+                           "id":  "renderer-network",
+                           "owner":  "offline-ui/pdv/infra/browser-network.js",
+                           "contract":  "Acesso privilegiado continua proibido; as duas exceções de rede do navegador são centralizadas no browser-network adapter: probe no-cors de conectividade e JSON oficial de NCM.",
+                           "status":  "enforced-by-current-tests",
+                           "fetchCalls":  2,
+                           "exceptions":  [
+                                              {
+                                                  "purpose":  "sonda de conectividade",
+                                                  "target":  "https://www.gstatic.com/generate_204"
+                                              },
+                                              {
+                                                  "purpose":  "carregamento de nomenclatura/NCM oficial",
+                                                  "target":  "URL oficial configurada em pdv.html"
+                                              }
+                                          ],
+                           "evidence":  {
+                                            "adapter":  "offline-ui/pdv/infra/browser-network.js",
+                                            "topLevelDirectFetchDebt":  0,
+                                            "topLevelDirectNavigatorOnlineDebt":  0,
+                                            "probe":  "https://www.gstatic.com/generate_204",
+                                            "ncm":  "URL oficial configurada em pdv.html",
+                                            "test":  "tests/unit/pdv-infra.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "sale-stock-revalidation",
+                           "owner":  "offline-db/atomic/sale.js#registerOfflineSaleAtomic",
+                           "contract":  "Venda normal revalida estoque no backend dentro do mesmo BEGIN IMMEDIATE, antes do primeiro INSERT da venda. A disponibilidade usa quantidadeEstoque do cache mais deltas locais ainda não CONFIRMED e agrega todas as linhas do mesmo produto antes da comparação.",
+                           "status":  "enforced-by-current-code-and-db-boundary",
+                           "evidence":  {
+                                            "transactionMode":  "BEGIN IMMEDIATE",
+                                            "validationBeforeSaleInsert":  true,
+                                            "aggregatesSameProductLines":  true,
+                                            "pendingDeltaSource":  "stock_movements associados a sync_outbox com status diferente de CONFIRMED",
+                                            "tests":  [
+                                                          "tests/integration/db-sale-stock-revalidation.test.js"
+                                                      ]
+                                        },
+                           "persistenceOwner":  "offline-db/repositories/stock.js",
+                           "genericStockApis":  [
+                                                    "registerStockMovement",
+                                                    "getStockProjection",
+                                                    "listPendingStockDeltasByProduct",
+                                                    "listStockMovements"
+                                                ],
+                           "deferredAtomicOwners":  {
+                                                        "crediario":  "offline-db/atomic/crediario.js (D12 completed)",
+                                                        "sale":  "offline-db/atomic/sale.js (D13 completed)"
+                                                    }
+                       },
+                       {
+                           "id":  "continuity-snapshot-restore",
+                           "owner":  "main.js + offline-ui/pdv.html",
+                           "contract":  "O estado de venda em andamento e capturado do PDV online, enriquecido sem perder campos, e restaurado no PDV offline pelo contrato __scfPdvExportContinuityDraft/__scfPdvRestoreContinuityDraft. Produtos, produto corrente, saleId/saleNumber, etapa de pagamento e paymentContinuity devem atravessar a transferencia.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "test":  "tests/unit/offline-continuity-failover-recovery.test.js",
+                                            "nativeExport":  "__scfPdvExportContinuityDraft",
+                                            "nativeRestore":  "__scfPdvRestoreContinuityDraft",
+                                            "activeSaleProbe":  "__scfPdvHasActiveContinuitySale"
+                                        }
+                       },
+                       {
+                           "id":  "failover-threshold-state-machine",
+                           "owner":  "main.js#offlineRuntimeTick",
+                           "contract":  "O monitor normal exige 3 falhas consecutivas para failover e 3 sucessos consecutivos para iniciar recovery; sucesso saudavel zera a sequencia de falhas. Hooks explicitos de erro de rede/navigator offline continuam sendo caminhos de failover imediato separados do monitor.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "failureThreshold":  3,
+                                            "recoveryThreshold":  3,
+                                            "test":  "tests/unit/offline-continuity-failover-recovery.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "recovery-return-online",
+                           "owner":  "main.js#offlineRuntimeTick + main.js#switchToOnlineUi",
+                           "contract":  "O retorno ONLINE permanece bloqueado enquanto houver venda ativa offline, carrinho transferido nao limpo, autenticacao de sync invalida, outbox ativa, identidade de sync ausente, tenant online divergente ou contador NFC-e remoto atras do local. Somente apos essas invariantes o overlay offline pode ser ocultado.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "test":  "tests/unit/offline-continuity-failover-recovery.test.js",
+                                            "requiresNoActiveSale":  true,
+                                            "requiresTransferredCartClear":  true,
+                                            "requiresValidSyncIdentity":  true,
+                                            "requiresEmptyActiveOutbox":  true,
+                                            "requiresSameTenant":  true,
+                                            "requiresCompatibleNfceCounter":  true
+                                        }
+                       },
+                       {
+                           "id":  "scf-offline-protocol",
+                           "owner":  "offline-ui/offline-shell.html + offline-ui/pdv.html",
+                           "contract":  "O shell offline preserva exatamente os 45 nomes SCF_* literais atualmente usados pelo bridge, dos quais 44 tambem existem no PDV; o unico shell-only e SCF_NFCE_NUMERACAO_ERRO. Mensagens recebidas pelo shell so sao aceitas quando event.source e o iframe scfOfflinePdv e event.origin coincide com o origin loopback.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "shellLiteralNames":  45,
+                                            "sharedWithPdv":  44,
+                                            "shellOnly":  [
+                                                              "SCF_NFCE_NUMERACAO_ERRO"
+                                                          ],
+                                            "test":  "tests/unit/offline-bridge-contracts.test.js",
+                                            "pdvMessagesManifest":  "offline-ui/pdv/contracts/messages.js",
+                                            "pdvLiteralNamesObserved":  265,
+                                            "p02ManifestMatchesPdv":  true,
+                                            "p02Test":  "tests/unit/pdv-contracts.test.js",
+                                            "p03ShellBridgeAdapter":  "offline-ui/pdv/infra/shell-bridge.js",
+                                            "topLevelDirectParentPostMessageDebt":  0,
+                                            "topLevelDirectWindowMessageListenerDebt":  0,
+                                            "srcdocNativeParentPostMessages":  9,
+                                            "srcdocNativeWindowMessageListeners":  6,
+                                            "srcdocReason":  "__htmlStatusSrcdoc é documento filho isolado e não carrega __scfPdvInfra.",
+                                            "p05ProtocolSurfaceScan":  "pdv.html + scripts runtime sob offline-ui/pdv/**, excluindo contracts manifests",
+                                            "p05SharedShellPdv":  44,
+                                            "p05ShellOnly":  [
+                                                                 "SCF_NFCE_NUMERACAO_ERRO"
+                                                             ]
+                                        }
+                       },
+                       {
+                           "id":  "printing-frame-marker-deduplication",
+                           "owner":  "main.js#instalarPonteTopDeImpressao + console-message frame bridge",
+                           "contract":  "A ponte TOP aceita somente o origin PDV pinado, deduplica requestId por 60 segundos e responde ao mesmo origin. O console-frame exige WebFrameMain confiavel e limpa __scfElectronPendingPrintPayload antes de enfileirar, tornando o payload one-shot.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "dedupTtlMs":  60000,
+                                            "trustedOriginRequired":  true,
+                                            "oneShotPendingPayload":  true,
+                                            "tests":  [
+                                                          "tests/unit/offline-bridge-contracts.test.js",
+                                                          "tests/unit/electron-static-security-audit.test.js"
+                                                      ]
+                                        }
+                       },
+                       {
+                           "id":  "pdv-internal-events-contract",
+                           "owner":  "offline-ui/pdv/contracts/events.js + offline-ui/pdv/infra/event-bus.js",
+                           "contract":  "Os 33 nomes literais scf:* observados no PDV permanecem idênticos durante a extração; detail e consumidores existentes não são alterados em P02.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "literalScfEventsObserved":  33,
+                                            "manifest":  "offline-ui/pdv/contracts/events.js",
+                                            "runtimeConsumersStillInline":  true,
+                                            "test":  "tests/unit/pdv-contracts.test.js",
+                                            "runtimeEventBusExtracted":  true,
+                                            "topLevelDirectDocumentDispatchDebt":  0,
+                                            "topLevelDirectScfListenerDebt":  0
+                                        }
+                       },
+                       {
+                           "id":  "pdv-storage-contract",
+                           "owner":  "offline-ui/pdv/contracts/storage-keys.js + offline-ui/pdv/infra/storage.js",
+                           "contract":  "P02 preserva chaves, prefixos, separadores, backend localStorage/sessionStorage, JSON shape e TTL. O pdv.html consome os valores centralizados, mas o adapter de persistência só será extraído em P03.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "localStorageKeys":  5,
+                                            "localStoragePrefixes":  4,
+                                            "sessionStorageKeys":  1,
+                                            "companyRegistryLookupTtlMs":  604800000,
+                                            "financeTenantSeparator":  "|",
+                                            "companyIeSeparator":  "_",
+                                            "runtimeStorageAdapterExtracted":  true,
+                                            "test":  "tests/unit/pdv-contracts.test.js",
+                                            "topLevelDirectLocalStorageDebt":  0,
+                                            "topLevelDirectSessionStorageDebt":  0
+                                        }
+                       },
+                       {
+                           "id":  "pdv-infra-adapters",
+                           "owner":  "offline-ui/pdv/infra/*",
+                           "contract":  "P03 centraliza no documento PDV principal as primitivas de shell bridge, event bus, Storage, DOM helper e browser network. Os adapters são scripts clássicos same-origin carregados após contracts e antes dos consumidores inline; não criam state owner, domínio, ESM ou bundler.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "modules":  [
+                                                            "offline-ui/pdv/infra/shell-bridge.js",
+                                                            "offline-ui/pdv/infra/event-bus.js",
+                                                            "offline-ui/pdv/infra/storage.js",
+                                                            "offline-ui/pdv/infra/dom.js",
+                                                            "offline-ui/pdv/infra/browser-network.js"
+                                                        ],
+                                            "classicScripts":  true,
+                                            "loadAfterContracts":  true,
+                                            "loadBeforeInlineConsumers":  true,
+                                            "topLevelParentPostMessageDebt":  0,
+                                            "topLevelWindowMessageListenerDebt":  0,
+                                            "topLevelDocumentDispatchDebt":  0,
+                                            "topLevelScfListenerDebt":  0,
+                                            "topLevelLocalStorageDebt":  0,
+                                            "topLevelSessionStorageDebt":  0,
+                                            "topLevelFetchDebt":  0,
+                                            "topLevelNavigatorOnlineDebt":  0,
+                                            "srcdocException":  {
+                                                                    "template":  "__htmlStatusSrcdoc",
+                                                                    "parentPostMessages":  9,
+                                                                    "windowMessageListeners":  6,
+                                                                    "usesPdvInfra":  false
+                                                                },
+                                            "tests":  [
+                                                          "tests/unit/pdv-infra.test.js",
+                                                          "tests/integration/offline-ui-server-security.test.js",
+                                                          "tests/unit/architecture-contracts.test.js"
+                                                      ],
+                                            "loadBeforeFirstInlineConsumer":  true,
+                                            "p04LoadOrderCorrection":  true
+                                        }
+                       },
+                       {
+                           "id":  "pdv-state-ownership",
+                           "owner":  "offline-ui/pdv/state/*",
+                           "contract":  "P04 estabelece owners canônicos transversais de sessão, runtime e navegação. Após a limpeza 10.3, compat/legacy-globals.js instala somente os três accessors com consumidores reais: perfil, acesso somente PDV e sistema online. connectivityReady e productLookupOpen são acessados diretamente pelos owners.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "sessionOwner":  "offline-ui/pdv/state/session-state.js",
+                                            "runtimeOwner":  "offline-ui/pdv/state/runtime-state.js",
+                                            "navigationOwner":  "offline-ui/pdv/state/navigation-state.js",
+                                            "legacyAdapter":  "offline-ui/pdv/compat/legacy-globals.js",
+                                            "bindings":  [
+                                                             "__scfPerfilSessao",
+                                                             "__scfAcessoSomentePdv",
+                                                             "__scfSistemaOnlineAtual"
+                                                         ],
+                                            "legacyBindingsAreAccessors":  true,
+                                            "stateDependsOnCompat":  false,
+                                            "newStoragePersistenceIntroduced":  false,
+                                            "domainGlobalsAbsorbed":  false,
+                                            "test":  "tests/unit/pdv-state-bootstrap.test.js",
+                                            "p05NewConsumersUseOwnersDirectly":  [
+                                                                                     "offline-ui/pdv/ui/components/connectivity-indicator.js -\u003e runtime-state",
+                                                                                     "offline-ui/pdv/ui/navigation/access-guard.js -\u003e session-state"
+                                                                                 ],
+                                            "stage10RemovedBindings":  [
+                                                                           "__scfStatusConexaoInternetReady",
+                                                                           "__scfPdvConsultaProdutoAtiva"
+                                                                       ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-bootstrap-composition",
+                           "owner":  "offline-ui/pdv/bootstrap.js",
+                           "contract":  "O composition root carrega contracts/infra/state/shared/compat antes do primeiro consumidor inline, valida cada owner e instala os bindings de compat ainda necessários. O agregado global __scfPdvApp foi removido em 10.3 por não possuir consumidor de produção.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "bootstrap":  "offline-ui/pdv/bootstrap.js",
+                                            "classicSameOrigin":  true,
+                                            "beforeFirstInlineSecurityConsumer":  true,
+                                            "legacyInstallAtBootstrap":  true,
+                                            "test":  "tests/unit/pdv-state-bootstrap.test.js",
+                                            "shared":  "offline-ui/pdv/shared/{values,helpers}",
+                                            "debugAggregateRemovedAtStage103":  "__scfPdvApp",
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-shared-ui-css",
+                           "owner":  "offline-ui/pdv/shared/* + offline-ui/pdv/ui/* + offline-ui/pdv/styles/{base,components}/*",
+                           "contract":  "Fechamento histórico P05: externalizou valores/helpers puros, componentes/navegação transversais e CSS base/components em scripts clássicos same-origin, preservando timing físico. Naquele fechamento nenhum domínio P06-P18 existia; P06-P07 são documentados em boundaries separados.",
+                           "status":  "historical-stage8-closure",
+                           "evidence":  {
+                                            "sharedModules":  [
+                                                                  "offline-ui/pdv/shared/values/ui-values.js",
+                                                                  "offline-ui/pdv/shared/helpers/text-format.js"
+                                                              ],
+                                            "uiModules":  [
+                                                              "offline-ui/pdv/ui/components/company-header.js",
+                                                              "offline-ui/pdv/ui/components/connectivity-indicator.js",
+                                                              "offline-ui/pdv/ui/navigation/access-guard.js"
+                                                          ],
+                                            "cssAssets":  [
+                                                              "offline-ui/pdv/styles/base/layout-settle.css",
+                                                              "offline-ui/pdv/styles/components/header-status.css",
+                                                              "offline-ui/pdv/styles/components/access-menu.css"
+                                                          ],
+                                            "inlineBlocksExternalized":  7,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "domainDirectoryCreated":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "companyHeaderProtocolPreserved":  [
+                                                                                   "SCF_EMPRESA_CABECALHO_SOLICITAR",
+                                                                                   "SCF_EMPRESA_CABECALHO_RESULTADO"
+                                                                               ],
+                                            "connectivityUsesRuntimeState":  true,
+                                            "accessGuardUsesSessionState":  true,
+                                            "tests":  [
+                                                          "tests/unit/pdv-ui-helpers.test.js",
+                                                          "tests/integration/offline-ui-server-security.test.js",
+                                                          "tests/unit/architecture-contracts.test.js"
+                                                      ]
+                                        }
+                       },
+                       {
+                           "id":  "pdv-products-domain",
+                           "owner":  "offline-ui/pdv/domains/products/{domain,search}.js",
+                           "contract":  "P06 move products/search/NCM para owner clássico same-origin, preservando SCF_*/scf:*, Storage e timing. Após 10.3, cache fiscal e NCM são consumidos diretamente pelo products owner; os três globals de cache fiscal sem consumidores foram removidos. Compatibilidade global permanece somente para preview/F4 enquanto houver consumidor.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/products/domain.js",
+                                            "searchController":  "offline-ui/pdv/domains/products/search.js",
+                                            "navigationOwner":  "offline-ui/pdv/state/navigation-state.js",
+                                            "storageKeyPreserved":  "learnedNcmCatalog",
+                                            "officialNcmViaBrowserNetwork":  true,
+                                            "directFetchIntroduced":  false,
+                                            "legacyGlobalsCanonicalState":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "preservedMessages":  [
+                                                                      "SCF_ESTOQUE_LISTAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_LISTAR_RESULTADO",
+                                                                      "SCF_ESTOQUE_ATUALIZADO",
+                                                                      "SCF_PRODUTO_FISCAL_VENDA_BUSCAR",
+                                                                      "SCF_PRODUTO_FISCAL_VENDA_RESULTADO",
+                                                                      "SCF_PRODUTO_FISCAL_VENDA_ERRO"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:pdv-render-current-product-preview",
+                                                                    "scf:pdv-cancelar-produto-preparado-consulta",
+                                                                    "scf:nova-venda-pronta"
+                                                                ],
+                                            "compatibilityDelegates":  [
+                                                                           "__scfPdvProdutoConsultaPreview",
+                                                                           "__scfPdvDesativarBuscaF4",
+                                                                           "__scfPdvConfirmarProdutoSelecionadoF4"
+                                                                       ],
+                                            "test":  "tests/unit/pdv-products-domain.test.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfPdvProdutoFiscalCache",
+                                                                                "__scfPdvCacheProductFiscal",
+                                                                                "__scfPdvFindCachedProductFiscal"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-customer-domain",
+                           "owner":  "offline-ui/pdv/domains/customer/{domain,create-update,list,edit,delete}.js",
+                           "contract":  "P07 mantém domain.js como owner de editingId e customers. Após 10.3 somente __scfClienteEdicaoId permanece como accessor porque ainda há consumidor no monólito; __scfClientesCadastroCache foi removido e a coleção é acessada pelo customer owner.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/customer/domain.js",
+                                            "controllers":  [
+                                                                "offline-ui/pdv/domains/customer/create-update.js",
+                                                                "offline-ui/pdv/domains/customer/list.js",
+                                                                "offline-ui/pdv/domains/customer/edit.js",
+                                                                "offline-ui/pdv/domains/customer/delete.js"
+                                                            ],
+                                            "canonicalState":  [
+                                                                   "editingId",
+                                                                   "customers"
+                                                               ],
+                                            "compatibilityAccessors":  [
+                                                                           "__scfClienteEdicaoId"
+                                                                       ],
+                                            "preservedMessages":  [
+                                                                      "SCF_CLIENTE_CADASTRAR",
+                                                                      "SCF_CLIENTE_CADASTRADO",
+                                                                      "SCF_CLIENTE_CADASTRO_ERRO",
+                                                                      "SCF_CLIENTES_LISTAR",
+                                                                      "SCF_CLIENTES_LISTA_RESULTADO",
+                                                                      "SCF_CLIENTES_LISTA_ERRO",
+                                                                      "SCF_CLIENTE_EXCLUIR",
+                                                                      "SCF_CLIENTE_EXCLUIDO",
+                                                                      "SCF_CLIENTE_EXCLUSAO_ERRO"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:cadastrar-opcao"
+                                                                ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "supplierCoordinatorMovedAtP07Closure":  false,
+                                            "p08StartedAtP07Closure":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-customer-domain.test.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfClientesCadastroCache"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-suppliers-coordinator-domain",
+                           "owner":  "offline-ui/pdv/domains/suppliers/{domain,registration-ui,crud,coordinator}.js",
+                           "contract":  "P08 mantém suppliers/coordinator como owner de editingId e suppliers, reutilizando customer. Após 10.3 somente __scfFornecedorEdicaoId permanece por ter consumidor no monólito; __scfFornecedoresCadastroCache foi removido e a coleção é owner-only.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/suppliers/domain.js",
+                                            "registrationUi":  "offline-ui/pdv/domains/suppliers/registration-ui.js",
+                                            "crudController":  "offline-ui/pdv/domains/suppliers/crud.js",
+                                            "coordinator":  "offline-ui/pdv/domains/suppliers/coordinator.js",
+                                            "customerOwnerReused":  "offline-ui/pdv/domains/customer/domain.js",
+                                            "canonicalState":  [
+                                                                   "editingId",
+                                                                   "suppliers"
+                                                               ],
+                                            "compatibilityAccessors":  [
+                                                                           "__scfFornecedorEdicaoId"
+                                                                       ],
+                                            "preservedMessages":  [
+                                                                      "SCF_FORNECEDORES_LISTAR",
+                                                                      "SCF_FORNECEDORES_LISTA_RESULTADO",
+                                                                      "SCF_FORNECEDORES_LISTA_ERRO",
+                                                                      "SCF_FORNECEDOR_CADASTRAR",
+                                                                      "SCF_FORNECEDOR_CADASTRADO",
+                                                                      "SCF_FORNECEDOR_CADASTRO_ERRO",
+                                                                      "SCF_FORNECEDOR_EXCLUIR",
+                                                                      "SCF_FORNECEDOR_EXCLUIDO",
+                                                                      "SCF_FORNECEDOR_EXCLUSAO_ERRO",
+                                                                      "SCF_MENU_SELECIONAR_CADASTRAR",
+                                                                      "SCF_MENU_SELECIONAR_CENTRAL",
+                                                                      "SCF_FISCAL_HOME_ABRIR",
+                                                                      "SCF_HISTORICO_VENDAS_ABRIR",
+                                                                      "SCF_MENU_SELECIONAR_ESTOQUE"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:cadastrar-opcao",
+                                                                    "scf:fechar-cadastro-colaborador"
+                                                                ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "p09StartedAtP08Closure":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-suppliers-domain.test.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfFornecedoresCadastroCache"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-history-domain",
+                           "owner":  "offline-ui/pdv/domains/history/*.js",
+                           "contract":  "P09 move o Histórico de Vendas genérico para scripts clássicos same-origin no mesmo ponto físico: core/paginação/render, cards/tabela, calendário, comprovante inline, dashboards, filtros e lifecycle de entrada/saída. domain.js é o owner canônico de frame e saleId pendente do comprovante inline, conforme dívida explicitamente deferida em P04. Fluxos explicitamente fiscais/devolução/impressão e a cópia de dashboard de estoque permanecem fora de P09 para seus lotes próprios.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/history/domain.js",
+                                            "controllerCount":  19,
+                                            "domainFileCount":  20,
+                                            "canonicalState":  [
+                                                                   "inlineReceiptFrame",
+                                                                   "inlineReceiptPendingSaleId"
+                                                               ],
+                                            "compatibilityAccessors":  [
+                                                                           "__scfHistoryInlineReceiptFrame",
+                                                                           "__scfHistoryInlineReceiptPendingSaleId"
+                                                                       ],
+                                            "coreMessagesPreserved":  [
+                                                                          "SCF_HISTORICO_VENDAS_ABRIR",
+                                                                          "SCF_HISTORICO_VENDAS_SOLICITAR",
+                                                                          "SCF_HISTORICO_VENDAS_RESULTADO",
+                                                                          "SCF_HISTORICO_VENDAS_ERRO",
+                                                                          "SCF_HISTORICO_VENDAS_FECHAR",
+                                                                          "SCF_NFCE_SOLICITAR_COMPROVANTE",
+                                                                          "SCF_EXPORTAR_XML_ENVIAR_EMAIL",
+                                                                          "SCF_EXPORTAR_XML_RESULTADO",
+                                                                          "SCF_EXPORTAR_XML_ERRO"
+                                                                      ],
+                                            "internalEventsPreserved":  [
+                                                                            "scf:historico-vendas-renderizado",
+                                                                            "scf:historico-vendas-atualizar",
+                                                                            "scf:historico-vendas-fechado",
+                                                                            "scf:historico-vendas-ano-dados",
+                                                                            "scf:comprovante-historico-solicitado",
+                                                                            "scf:cupom-historico-fechado"
+                                                                        ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "deferredCrossDomainScriptsRemainInline":  [
+                                                                                           "history NFe/NFCe cancellation/contingency",
+                                                                                           "history devolucao/DANFE flows",
+                                                                                           "history NFCe printing/reprint flows",
+                                                                                           "stock annual-dashboard copy"
+                                                                                       ],
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-history-domain.test.js",
+                                            "p10StartedAtP09Closure":  false
+                                        }
+                       },
+                       {
+                           "id":  "pdv-inventory-domain",
+                           "owner":  "offline-ui/pdv/domains/inventory/*.js",
+                           "contract":  "P10 move o domínio ESTOQUE para scripts clássicos same-origin preservando pontos físicos, mensagens SCF_ESTOQUE_*/SCF_PRODUTO_GTIN_*, eventos scf:estoque-* e navegação de teclado. domain.js é o owner canônico da coleção de produtos e métricas derivadas; core.js mantém apenas timers/requestIds/seleções transitórias de controller. Dashboards consomem o owner e contratos Storage existentes, sem novo backend de persistência.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/inventory/domain.js",
+                                            "coreController":  "offline-ui/pdv/domains/inventory/core.js",
+                                            "domainFileCount":  11,
+                                            "canonicalState":  [
+                                                                   "products"
+                                                               ],
+                                            "canonicalMetrics":  [
+                                                                     "estimatedValue",
+                                                                     "registeredProducts",
+                                                                     "potentialMargin",
+                                                                     "indicators"
+                                                                 ],
+                                            "legacyPublicAdapters":  [
+                                                                         "scfAbrirEstoque",
+                                                                         "scfFecharEstoque",
+                                                                         "scfAtualizarEstoque",
+                                                                         "scfObterValorEstimadoEstoque",
+                                                                         "scfObterQuantidadeProdutosCadastrados",
+                                                                         "scfObterMargemPotencialEstoque",
+                                                                         "scfObterIndicadoresEstoque"
+                                                                     ],
+                                            "preservedMessages":  [
+                                                                      "SCF_ESTOQUE_LISTAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_LISTAR_RESULTADO",
+                                                                      "SCF_ESTOQUE_ATUALIZADO",
+                                                                      "SCF_ESTOQUE_PRODUTO_CADASTRAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_PRODUTO_CADASTRADO",
+                                                                      "SCF_ESTOQUE_PRODUTO_ATUALIZAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_PRODUTO_ATUALIZADO",
+                                                                      "SCF_ESTOQUE_PRODUTO_EXCLUIR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_PRODUTO_EXCLUIDO",
+                                                                      "SCF_ESTOQUE_XML_FORNECEDOR_IMPORTAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_XML_ITENS_PROCESSAR_SOLICITAR",
+                                                                      "SCF_ESTOQUE_XML_PRODUTO_FINALIZAR_SOLICITAR",
+                                                                      "SCF_PRODUTO_GTIN_PESQUISAR",
+                                                                      "SCF_PRODUTO_GTIN_RESULTADO",
+                                                                      "SCF_STOCK_KEYBOARD_FROM_MENU"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:estoque-produto-cadastrar",
+                                                                    "scf:estoque-produtos-atualizados",
+                                                                    "scf:estoque-xml-selecionado",
+                                                                    "scf:historico-vendas-ano-dados",
+                                                                    "scf:historico-vendas-renderizado"
+                                                                ],
+                                            "storageContracts":  [
+                                                                     "storage.session.keys.stockAnnualSalesDashboardHtml",
+                                                                     "storage.local.keys.fiscalSales"
+                                                                 ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "p11Started":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-inventory-domain.test.js",
+                                            "childTemplateStockScriptsRemainInline":  [
+                                                                                          "scf-stock-keyboard-menu-bridge-final",
+                                                                                          "scf-menu-estoque-blur-foco-visual-final"
+                                                                                      ],
+                                            "p03ChildBoundaryPreserved":  true
+                                        }
+                       },
+                       {
+                           "id":  "pdv-finance-domain",
+                           "owner":  "offline-ui/pdv/domains/finance/*.js",
+                           "contract":  "P11 mantém o domínio FINANCEIRO em scripts clássicos same-origin, preservando mensagens, eventos, Storage e adapters públicos scfAbrirFinanceiro/scfFecharFinanceiro. Em 10.3 os sete globals/accessors de estado sem consumidor foram removidos; core/views/cash consomem financeDomain diretamente.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/finance/domain.js",
+                                            "coreController":  "offline-ui/pdv/domains/finance/core.js",
+                                            "domainFileCount":  13,
+                                            "canonicalState":  [
+                                                                   "cashSnapshot",
+                                                                   "localMovements",
+                                                                   "exitSelectedDateFilter",
+                                                                   "receivablePending",
+                                                                   "accountStatusReload",
+                                                                   "cashMovementDateProvider",
+                                                                   "cashMovementDateFilter"
+                                                               ],
+                                            "legacyAccessorsAndDelegates":  [
+
+                                                                            ],
+                                            "publicAdapters":  [
+                                                                   "scfAbrirFinanceiro",
+                                                                   "scfFecharFinanceiro"
+                                                               ],
+                                            "preservedMessageFamilies":  [
+                                                                             "SCF_FINANCEIRO_SALDO_DADOS_*",
+                                                                             "SCF_FINANCEIRO_EXTRATO_MES_*",
+                                                                             "SCF_FINANCEIRO_RESUMO_DADOS_*",
+                                                                             "SCF_FINANCEIRO_CONTA_PAGAR_*",
+                                                                             "SCF_FINANCEIRO_CONTA_RECEBER_*",
+                                                                             "SCF_FINANCEIRO_SAIDA_*",
+                                                                             "SCF_CAIXA_MOVIMENTO_*"
+                                                                         ],
+                                            "preservedEvents":  [
+                                                                    "scf:financeiro-retorno-pdv",
+                                                                    "scf:financeiro-saida-anulada-local",
+                                                                    "scf:financeiro-saida-data-filtro-alterado",
+                                                                    "scf:financeiro-saida-selecionar",
+                                                                    "scf:financeiro-saida-status",
+                                                                    "scf:financeiro-saldo-recarregar"
+                                                                ],
+                                            "storageContracts":  [
+                                                                     "storage.local.keys.financeExitPaid",
+                                                                     "storage.local.prefixes.financeSangriaHistory",
+                                                                     "storage.local.prefixes.financeSangriaReversed",
+                                                                     "storage.defaults.financeTenant"
+                                                                 ],
+                                            "supplierOwnerReused":  "offline-ui/pdv/domains/suppliers/domain.js",
+                                            "childTemplateFinanceMenuRemainsInline":  "scf-financeiro-menu-ativo-preto-script-final",
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "p12Started":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-finance-domain.test.js",
+                                            "cashReceiptRemainsInlineAtP11Closure":  "scf-cash-receipt-script-final",
+                                            "p12CashOwner":  "offline-ui/pdv/domains/cash/domain.js",
+                                            "financeEntryConsumesCashOwner":  true,
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfFinanceCaixaConsulta",
+                                                                                "__scfFinanceMovimentosLocais",
+                                                                                "__scfFinanceExitSelectedDateFilter",
+                                                                                "__scfContaReceberPendencias",
+                                                                                "__scfFinanceContaDigitalSituacaoReload",
+                                                                                "__scfFinanceDatasMovimentacaoCaixa",
+                                                                                "__scfFinanceFiltrarMovimentacaoCaixaPorData"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-cash-domain",
+                           "owner":  "offline-ui/pdv/domains/cash/*.js",
+                           "contract":  "P12 mantém CAIXA top-level em scripts clássicos same-origin, preservando SCF_CAIXA_*, eventos e timing físico. __scfGetCaixaAtual e scfFecharComprovanteCaixa permanecem por ainda terem consumidores; __scfRetornoPdvCaixaFechadoXReady foi removido em 10.3. finance é resolvido lazy em receipt.js por causa do load-order legado.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/cash/domain.js",
+                                            "coreController":  "offline-ui/pdv/domains/cash/core.js",
+                                            "receiptController":  "offline-ui/pdv/domains/cash/receipt.js",
+                                            "domainFileCount":  7,
+                                            "canonicalState":  [
+                                                                   "currentCash",
+                                                                   "receiptCloser",
+                                                                   "returnCoordinatorReady"
+                                                               ],
+                                            "legacyAdapters":  [
+                                                                   "__scfGetCaixaAtual",
+                                                                   "scfFecharComprovanteCaixa"
+                                                               ],
+                                            "preservedMessageFamilies":  [
+                                                                             "SCF_CAIXA_ABRIR/ABERTO/ABERTURA_ERRO",
+                                                                             "SCF_CAIXA_CONSULTAR/CONSULTA_RESULTADO/CONSULTA_ERRO",
+                                                                             "SCF_CAIXA_MOVIMENTO_REGISTRAR/REGISTRADO/ERRO",
+                                                                             "SCF_CAIXA_FECHAR/FECHADO/FECHAMENTO_ERRO",
+                                                                             "SCF_CAIXA_TELA_ABRIR"
+                                                                         ],
+                                            "preservedPrinting":  [
+                                                                      "SCF_EFISCO_IMPRIMIR_NFCE_LOCAL",
+                                                                      "SCF_EFISCO_IMPRIMIR_NFCE_LOCAL_RESULT"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:financeiro-retorno-pdv",
+                                                                    "scf:financeiro-saida-cadastrar",
+                                                                    "scf:financeiro-saida-status"
+                                                                ],
+                                            "supplierOwnerReused":  "offline-ui/pdv/domains/suppliers/domain.js",
+                                            "financeOwnerReused":  "offline-ui/pdv/domains/finance/domain.js",
+                                            "financeConsumerUpdated":  "offline-ui/pdv/domains/finance/entry-calendar-form.js",
+                                            "childTemplateCashStateRemainsInline":  "__cashMovementMenuBloqueado",
+                                            "p03ChildBoundaryPreserved":  true,
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "p13Started":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-cash-domain.test.js",
+                                            "financeOwnerLoadTiming":  "cash/receipt.js é carregado antes de finance/domain.js por timing físico legado; acesso ao finance owner deve ser lazy no momento do evento, nunca eager no bootstrap.",
+                                            "financeOwnerLazyResolver":  "requireFinanceDomain",
+                                            "stage10IntegrationRegressionTest":  "tests/integration/pdv-stage10-e2e.test.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfRetornoPdvCaixaFechadoXReady"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-crediario-domain",
+                           "owner":  "offline-ui/pdv/domains/crediario/*.js",
+                           "contract":  "P13 move o domínio CREDIÁRIO top-level para scripts clássicos same-origin preservando mensagens SCF_CREDIARIO_*, eventos scf:crediario-*, requestIds, timing do F5 e adapters públicos. domain.js é o owner canônico dos flags compartilhados e guards; customer é reutilizado como owner externo. Estados de crediário do menu em __htmlStatusSrcdoc permanecem inline para preservar P03; a tabela unificada continua cross-domain e P14 sale/payment não é iniciado.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/crediario/domain.js",
+                                            "coreController":  "offline-ui/pdv/domains/crediario/core.js",
+                                            "domainFileCount":  12,
+                                            "canonicalState":  [
+                                                                   "paymentAwaitingF1",
+                                                                   "paymentMethodsOpen",
+                                                                   "paymentPartialSelectionActive",
+                                                                   "sideMenuLocked",
+                                                                   "guards"
+                                                               ],
+                                            "legacyAccessors":  [
+                                                                    "__scfCrediarioPagamentoAguardandoF1",
+                                                                    "__scfCrediarioPagamentoFormasAberto",
+                                                                    "__scfCrediarioPagamentoParcialSelecaoAtiva",
+                                                                    "__scfCrediarioMenuLateralBloqueado"
+                                                                ],
+                                            "publicAdaptersPreserved":  [
+                                                                            "scfAbrirListaCrediario",
+                                                                            "scfFecharListaCrediario",
+                                                                            "scfConfirmarVendaCrediario",
+                                                                            "scfCancelarCrediarioAberto",
+                                                                            "scfCarregarCrediarioAbertoNoPdv",
+                                                                            "scfAbrirPagamentoCrediario",
+                                                                            "scfVoltarPagamentoParaCrediario"
+                                                                        ],
+                                            "preservedMessageFamilies":  [
+                                                                             "SCF_CREDIARIO_LISTAR/LISTA_RESULTADO/LISTA_ERRO",
+                                                                             "SCF_CREDIARIO_ABRIR/ABERTO/ABERTURA_ERRO",
+                                                                             "SCF_CREDIARIO_OBTER/DETALHE_RESULTADO/DETALHE_ERRO",
+                                                                             "SCF_CREDIARIO_ATUALIZAR_ITENS/ITENS_ATUALIZADOS/ITENS_ATUALIZACAO_ERRO",
+                                                                             "SCF_CREDIARIO_CANCELAR/CANCELADO/CANCELAMENTO_ERRO",
+                                                                             "SCF_CLIENTES_LISTAR/LISTA_RESULTADO",
+                                                                             "SCF_FISCAL_HOME_ABRIR",
+                                                                             "SCF_CREDIARIO_LISTA_TOPO_VOLTAR"
+                                                                         ],
+                                            "preservedEvents":  [
+                                                                    "scf:crediario-venda-pronta",
+                                                                    "scf:crediario-parcial-selecao-alterada",
+                                                                    "scf:nova-venda-pronta",
+                                                                    "scf:limpar-venda-concluida"
+                                                                ],
+                                            "customerOwnerReused":  "offline-ui/pdv/domains/customer/domain.js",
+                                            "childTemplateStatesRemainInline":  [
+                                                                                    "__crediarioPdvNormalAtivo",
+                                                                                    "__crediarioDetalheMenuBloqueado"
+                                                                                ],
+                                            "crossDomainUnifiedTableRemainsInline":  "scf-pdv-tabela-unica-real-script",
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-crediario-domain.test.js",
+                                            "p14StartedAtP13Closure":  false,
+                                            "p14SalePaymentOwner":  "offline-ui/pdv/domains/sale-payment/domain.js",
+                                            "stage10RemovedDeadGlobal":  "__scfCrediarioMantemFoco",
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-sale-payment-domain",
+                           "owner":  "offline-ui/pdv/domains/sale-payment/*.js",
+                           "contract":  "P14 mantém domain.js como owner de venda interna, receipt pendente, janela mínima e guards. Após 10.3 os accessors globais de estado sem consumidor foram removidos; sale/payment/fiscal/continuity consomem salePaymentDomain diretamente.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/sale-payment/domain.js",
+                                            "saleCore":  "offline-ui/pdv/domains/sale-payment/sale-core.js",
+                                            "paymentCore":  "offline-ui/pdv/domains/sale-payment/payment-core.js",
+                                            "domainFileCount":  14,
+                                            "canonicalState":  [
+                                                                   "internalSaleActive",
+                                                                   "currentReceiptPendingSaleId",
+                                                                   "validationMinimumUntil",
+                                                                   "guards"
+                                                               ],
+                                            "legacyAccessors":  [
+
+                                                                ],
+                                            "preservedSaleMessages":  [
+                                                                          "SCF_CENTRAL_VENDA_ESTADO",
+                                                                          "SCF_FISCAL_FINALIZAR_SOLICITAR",
+                                                                          "SCF_FISCAL_PRODUTOS_VOLTAR_SOLICITAR",
+                                                                          "SCF_NFCE_NUMERACAO_SOLICITAR",
+                                                                          "SCF_PRODUTO_FISCAL_VENDA_BUSCAR/RESULTADO/ERRO"
+                                                                      ],
+                                            "preservedPaymentMessages":  [
+                                                                             "SCF_VENDA_OFFLINE_REGISTRADA",
+                                                                             "SCF_VENDA_INTERNA_REGISTRADA",
+                                                                             "SCF_VENDA_PJ_REGISTRADA",
+                                                                             "SCF_VENDA_ERRO",
+                                                                             "SCF_NFCE_PRECHECK_PRE_PAGAMENTO",
+                                                                             "SCF_NFCE_PRECHECK_OK/ERRO",
+                                                                             "SCF_NFCE_SOLICITAR_EMISSAO"
+                                                                         ],
+                                            "preservedEvents":  [
+                                                                    "scf:finalizar-venda",
+                                                                    "scf:venda-paga",
+                                                                    "scf:nova-venda-pronta",
+                                                                    "scf:limpar-venda-concluida",
+                                                                    "scf:pdv-venda-interna-toggle"
+                                                                ],
+                                            "storageContracts":  [
+                                                                     "storage.local.keys.fiscalDraft",
+                                                                     "storage.local.keys.fiscalSales",
+                                                                     "storage.local.keys.lastFinalizedSale"
+                                                                 ],
+                                            "continuityHooksRemainInSaleCoreUntilP15":  [
+                                                                                            "__scfPdvExportContinuityDraft",
+                                                                                            "__scfPdvHasActiveContinuitySale",
+                                                                                            "__scfPdvRestoreContinuityDraft"
+                                                                                        ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-sale-payment-domain.test.js",
+                                            "p15StartedAtP14Closure":  false,
+                                            "p15ContinuityOwner":  "offline-ui/pdv/domains/continuity/domain.js",
+                                            "continuityPortsRegistered":  true,
+                                            "paymentContinuityRestoreOwner":  "offline-ui/pdv/domains/sale-payment/payment-core.js",
+                                            "p16StartedAtP14Closure":  false,
+                                            "fiscalResultScriptsInlineAtP14Closure":  [
+                                                                                          "fiscal-receipt-model-script",
+                                                                                          "scf-pdv-pf-cupom-fiscal-rodape-script-final",
+                                                                                          "scf-pdv-nfce-processing-receipt-footer-script-final"
+                                                                                      ],
+                                            "p16FiscalOwner":  "offline-ui/pdv/domains/fiscal/domain.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfPdvVendaInternaAtiva",
+                                                                                "__scfCurrentSaleReceiptPendingSaleId",
+                                                                                "scfValidationMinimumUntil"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-continuity-domain",
+                           "owner":  "offline-ui/pdv/domains/continuity/{domain,core}.js",
+                           "contract":  "P15 materializa o owner de continuidade no renderer e mantém os contratos públicos consumidos por offline/continuity/continuity-mirror.js e continuity-recovery.js. O draft espelhado continua pertencendo ao mirror do main process; no renderer, continuity/domain.js orquestra sale/payment por ports únicos. Os globals __scfPdvExportContinuityDraft, __scfPdvRestoreContinuityDraft e __scfPdvHasActiveContinuitySale são apenas delegates. P16 fiscal permanece não iniciado.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/continuity/domain.js",
+                                            "legacyAdapter":  "offline-ui/pdv/domains/continuity/core.js",
+                                            "domainFileCount":  2,
+                                            "rendererLegacyDelegates":  [
+                                                                            "__scfPdvExportContinuityDraft",
+                                                                            "__scfPdvRestoreContinuityDraft",
+                                                                            "__scfPdvHasActiveContinuitySale"
+                                                                        ],
+                                            "mainProcessMirrorOwner":  "offline/continuity/continuity-mirror.js",
+                                            "mainProcessRecoveryOwner":  "offline/continuity/continuity-recovery.js",
+                                            "salePortOwner":  "offline-ui/pdv/domains/sale-payment/sale-core.js",
+                                            "paymentPortOwner":  "offline-ui/pdv/domains/sale-payment/payment-core.js",
+                                            "paymentContinuityFieldsPreserved":  [
+                                                                                     "selectedMethod",
+                                                                                     "editingMethod",
+                                                                                     "flowMode",
+                                                                                     "methodAmount",
+                                                                                     "cashReceived",
+                                                                                     "paymentParts"
+                                                                                 ],
+                                            "paymentRestoreLexicalOwnershipCorrected":  true,
+                                            "paymentRestoreCorrection":  "A lógica antes localizada no sale-core referenciava paymentParts/selectedPaymentMethod/inputs definidos lexicalmente no IIFE de payment-core. P15 move apenas essa aplicação de estado para payment-core e mantém a orquestração/timing via callback do sale port.",
+                                            "continuityDraftShapePreserved":  [
+                                                                                  "version",
+                                                                                  "saleNumber",
+                                                                                  "saleId",
+                                                                                  "products",
+                                                                                  "currentProduct",
+                                                                                  "totalValue",
+                                                                                  "activeProducts",
+                                                                                  "paymentStageOpen",
+                                                                                  "paymentStageKind",
+                                                                                  "paymentContinuity",
+                                                                                  "capturedAt"
+                                                                              ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-continuity-domain.test.js",
+                                            "p16StartedAtP15Closure":  false,
+                                            "p16FiscalOwner":  "offline-ui/pdv/domains/fiscal/domain.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-fiscal-domain",
+                           "owner":  "offline-ui/pdv/domains/fiscal/*.js",
+                           "contract":  "P16 mantém o receipt fiscal e rodapés em scripts clássicos same-origin. domain.js possui comprovante/QR/closer e receipt.js consome history, sale/payment e printing owners diretamente. Em 10.3 __scfNfceQrUrlAtual foi removido por não possuir consumidor; scfCloseCurrentFiscalReceipt permanece somente enquanto houver consumidor legado.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/fiscal/domain.js",
+                                            "receiptController":  "offline-ui/pdv/domains/fiscal/receipt.js",
+                                            "completedFooter":  "offline-ui/pdv/domains/fiscal/completed-footer.js",
+                                            "processingFooter":  "offline-ui/pdv/domains/fiscal/processing-footer.js",
+                                            "domainFileCount":  4,
+                                            "canonicalState":  [
+                                                                   "completedCardWasVisible",
+                                                                   "historyReceiptSaleId",
+                                                                   "currentReceipt",
+                                                                   "currentReceiptFromHistory",
+                                                                   "secondCopyPending",
+                                                                   "qrUrl",
+                                                                   "whatsappRequests",
+                                                                   "receiptCloser"
+                                                               ],
+                                            "legacyAccessor":  [
+
+                                                               ],
+                                            "legacyCloserDelegate":  [
+                                                                         "scfCloseCurrentFiscalReceipt"
+                                                                     ],
+                                            "historyOwnerReused":  "offline-ui/pdv/domains/history/domain.js",
+                                            "salePaymentOwnerReused":  "offline-ui/pdv/domains/sale-payment/domain.js",
+                                            "preservedMessages":  [
+                                                                      "SCF_NFCE_COMPROVANTE_AUTORIZADO",
+                                                                      "SCF_NFCE_COMPROVANTE_CONTINGENCIA",
+                                                                      "SCF_NFCE_COMPROVANTE_CONTINGENCIA_ERRO",
+                                                                      "SCF_WHATSAPP_ENVIAR_CUPOM",
+                                                                      "SCF_WHATSAPP_CUPOM_RESULTADO",
+                                                                      "SCF_WHATSAPP_CUPOM_ERRO"
+                                                                  ],
+                                            "preservedEvents":  [
+                                                                    "scf:emitir-cupom-fiscal",
+                                                                    "scf:nfce-historico-aberto",
+                                                                    "scf:cupom-historico-fechado",
+                                                                    "scf:limpar-venda-concluida"
+                                                                ],
+                                            "completedFooterTimers":  [
+                                                                          0,
+                                                                          80,
+                                                                          250,
+                                                                          700
+                                                                      ],
+                                            "processingFooterTimers":  [
+                                                                           0,
+                                                                           50,
+                                                                           120,
+                                                                           300,
+                                                                           800
+                                                                       ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-fiscal-domain.test.js",
+                                            "superadminP17StartedAtP16Closure":  false,
+                                            "p17SuperadminOwner":  "offline-ui/pdv/domains/superadmin/domain.js",
+                                            "printingP18StartedAtP16Closure":  false,
+                                            "printingCompatibilityDeferredAtP16Closure":  [
+                                                                                              "__scfUltimaImagemCupomParaImpressao",
+                                                                                              "scfGerarImagemCupomBase64ParaImpressao",
+                                                                                              "scfImprimirNfceAtualAutomaticamente",
+                                                                                              "scfImprimirNfceHistoricoAoReenviar"
+                                                                                          ],
+                                            "p18PrintingOwner":  "offline-ui/pdv/domains/printing/domain.js",
+                                            "printingCompatibilityResolvedByP18":  true,
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfNfceQrUrlAtual"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-superadmin-domain",
+                           "owner":  "offline-ui/pdv/domains/superadmin/*.js",
+                           "contract":  "P17 mantém os fluxos SUPERADMIN top-level de empresa e certificado A1 em scripts clássicos same-origin. domain.js é owner único do modo SUPERADMIN e do registry de actions; em 10.3 os sete globals __scfSuperAdmin* foram removidos por não possuírem consumidores. O script SCF_SUPERADMIN_MENU_MODO do iframe filho permanece inline para preservar a fronteira de transporte do frame.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "domainOwner":  "offline-ui/pdv/domains/superadmin/domain.js",
+                                            "domainFileCount":  14,
+                                            "externalizedInlineScripts":  13,
+                                            "canonicalState":  [
+                                                                   "active",
+                                                                   "actions.afterCompanySuccess",
+                                                                   "actions.clearCompanyForm",
+                                                                   "actions.requestCompanies",
+                                                                   "actions.currentPanelTitle",
+                                                                   "actions.resetUpdateMode",
+                                                                   "actions.closeEditWithoutSaving",
+                                                                   "actions.leaveDetailsView"
+                                                               ],
+                                            "legacyActionAccessors":  [
+
+                                                                      ],
+                                            "activeOwnerMessages":  [
+                                                                        "SCF_SUPERADMIN_READY",
+                                                                        "SCF_WIX_READY"
+                                                                    ],
+                                            "companyMessages":  [
+                                                                    "SCF_SUPERADMIN_EMPRESA_CNPJ_CONSULTAR/RESULTADO/ERRO",
+                                                                    "SCF_SUPERADMIN_EMPRESA_CADASTRAR/CADASTRO_RESULTADO/CADASTRO_ERRO",
+                                                                    "SCF_SUPERADMIN_EMPRESAS_LISTAR/RESULTADO/ERRO",
+                                                                    "SCF_SUPERADMIN_EMPRESA_ATUALIZAR/ATUALIZACAO_RESULTADO/ATUALIZACAO_ERRO"
+                                                                ],
+                                            "certificateMessages":  [
+                                                                        "SCF_SUPERADMIN_CERTIFICADO_A1_ENVIAR",
+                                                                        "SCF_SUPERADMIN_CERTIFICADO_A1_RESULTADO",
+                                                                        "SCF_SUPERADMIN_CERTIFICADO_A1_ERRO"
+                                                                    ],
+                                            "menuMessage":  "SCF_SUPERADMIN_MENU_MODO",
+                                            "preservedEvents":  [
+                                                                    "scf:cadastrar-opcao",
+                                                                    "scf:superadmin-garantir-cadastro-cliente"
+                                                                ],
+                                            "customerShellTimers":  [
+                                                                        0,
+                                                                        80,
+                                                                        220,
+                                                                        500,
+                                                                        900
+                                                                    ],
+                                            "certificateLimitBytes":  5242880,
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "test":  "tests/unit/pdv-superadmin-domain.test.js",
+                                            "childFrameMenuScriptInline":  "scf-superadmin-menu-labels-final-script",
+                                            "childFrameReason":  "Permanece dentro de __htmlStatusSrcdoc: usa window.parent.postMessage/message listener no contexto do iframe e não pode consumir o owner top-level sem criar bridge paralela.",
+                                            "printingP18StartedAtP17Closure":  false,
+                                            "p18PrintingOwner":  "offline-ui/pdv/domains/printing/domain.js",
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "__scfSuperAdminA1AposCadastroSucesso",
+                                                                                "__scfSuperAdminLimparFormularioEmpresa",
+                                                                                "__scfSuperAdminSolicitarEmpresas",
+                                                                                "__scfSuperAdminTituloPainelAtual",
+                                                                                "__scfSuperAdminResetarModoAtualizacao",
+                                                                                "__scfSuperAdminFecharEdicaoSemSalvar",
+                                                                                "__scfSuperAdminSairDetalhesVisual"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "pdv-printing-domain",
+                           "owner":  "offline-ui/pdv/domains/printing/*.js",
+                           "contract":  "P18 mantém um owner único de impressão NFC-e no renderer e o canal V5 consumido pelo main process. Após 10.3, executores e cache são acessados diretamente por printingDomain; somente __scfElectronPendingPrintPayload permanece como accessor cross-process porque frame-print-bridge.js o lê e limpa one-shot.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "rendererOwner":  "offline-ui/pdv/domains/printing/domain.js",
+                                            "frameController":  "offline-ui/pdv/domains/printing/frame-controller.js",
+                                            "historyReceiptView":  "offline-ui/pdv/domains/printing/history-receipt-view.js",
+                                            "domainFileCount":  3,
+                                            "canonicalState":  [
+                                                                   "currentPrinter",
+                                                                   "historyPrinter",
+                                                                   "contingencyPrinter",
+                                                                   "imageGenerator",
+                                                                   "lastImage",
+                                                                   "pendingPayload"
+                                                               ],
+                                            "legacyDelegates":  [
+
+                                                                ],
+                                            "legacyAccessors":  [
+                                                                    "__scfElectronPendingPrintPayload"
+                                                                ],
+                                            "markersPreserved":  [
+                                                                     "__EFISCO_NFCE_PRINT_FRAME_V5__",
+                                                                     "__EFISCO_NFCE_CONTINGENCIA_PRINT_DIAG_V1__"
+                                                                 ],
+                                            "mainProcessOwner":  [
+                                                                     "printing/print-queue.js",
+                                                                     "printing/frame-print-bridge.js",
+                                                                     "printing/windows-driver.js"
+                                                                 ],
+                                            "mainPayloadShape":  [
+                                                                     "nativeReceipt",
+                                                                     "imageBase64",
+                                                                     "origem",
+                                                                     "saleId"
+                                                                 ],
+                                            "mainPendingPayloadConsumption":  "frame-print-bridge lê __scfElectronPendingPrintPayload do frame confiável, copia somente campos serializáveis e limpa o payload antes do enqueue.",
+                                            "dedupeRendererMs":  30000,
+                                            "dedupeMainFrameMs":  60000,
+                                            "contingencyCopySpacingMs":  1400,
+                                            "removedSupersededInlineScripts":  [
+                                                                                   "scf-nfce-impressao-automatica-80mm-script-final",
+                                                                                   "scf-historico-nfce-reenviar-impressao-80mm-script-final",
+                                                                                   "scf-nfce-electron-silent-print-bridge-final",
+                                                                                   "scf-nfce-electron-direto-sem-window-print-final",
+                                                                                   "scf-nfce-escpos-direto-final",
+                                                                                   "scf-nfce-driver-windows-silencioso-final",
+                                                                                   "scf-nfce-driver-windows-ponte-pai-v2-final",
+                                                                                   "scf-nfce-driver-windows-ponte-top-v4-final"
+                                                                               ],
+                                            "directFetchIntroduced":  false,
+                                            "newStorageIntroduced":  false,
+                                            "classicSameOrigin":  true,
+                                            "esmOrBundler":  false,
+                                            "stylesDomainsCreated":  false,
+                                            "tests":  [
+                                                          "tests/unit/pdv-printing-domain.test.js",
+                                                          "tests/unit/printing-coordinators.test.js",
+                                                          "tests/unit/offline-bridge-contracts.test.js"
+                                                      ],
+                                            "stage10RemovedLegacyGlobals":  [
+                                                                                "scfImprimirNfceAtualAutomaticamente",
+                                                                                "scfImprimirNfceHistoricoAoReenviar",
+                                                                                "scfImprimirNfceContingenciaAutomaticamente",
+                                                                                "scfGerarImagemCupomBase64ParaImpressao",
+                                                                                "__scfUltimaImagemCupomParaImpressao",
+                                                                                "__scfElectronPrintRequestId",
+                                                                                "scfNfceLocalPrintMode",
+                                                                                "scfNfceLocalPrintPrinter"
+                                                                            ],
+                                            "cleanupTest":  "tests/unit/pdv-stage10-cleanup.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "offline-ui-server-static-security",
+                           "owner":  "offline-ui-server.js",
+                           "contract":  "O servidor escuta somente em 127.0.0.1, aceita apenas GET/HEAD e mantém a allowlist fixa. P01 libera somente /pdv/** para arquivos .js e .css same-origin existentes dentro do root modular real; extensão/MIME, path lexical, realpath/symlink, traversal e encoding perigoso falham fechado. nosniff, no-referrer e no-store permanecem.",
+                           "status":  "enforced-by-current-tests",
+                           "evidence":  {
+                                            "loopbackHost":  "127.0.0.1",
+                                            "methods":  [
+                                                            "GET",
+                                                            "HEAD"
+                                                        ],
+                                            "fixedRoutes":  [
+                                                                "/",
+                                                                "/offline-shell.html",
+                                                                "/pdv.html",
+                                                                "/vendor/html2canvas-1.4.1.min.js",
+                                                                "/vendor/qrcodejs-1.0.0.min.js"
+                                                            ],
+                                            "modularRoutePrefix":  "/pdv/",
+                                            "modularExtensions":  {
+                                                                      ".js":  "application/javascript; charset=utf-8",
+                                                                      ".css":  "text/css; charset=utf-8"
+                                                                  },
+                                            "rootChecks":  [
+                                                               "pdvAssetsRoot lexical inside offline-ui",
+                                                               "requested path lexical inside pdvAssetsRoot",
+                                                               "requested file realpath inside real pdvAssetsRoot"
+                                                           ],
+                                            "dangerousEncodedPathsBlocked":  true,
+                                            "symlinkEscapeBlocked":  true,
+                                            "pdvExternalizationStarted":  true,
+                                            "classicSameOriginFirstExtraction":  true,
+                                            "esmBundlerDeferred":  true,
+                                            "test":  "tests/integration/offline-ui-server-security.test.js",
+                                            "architectureGate":  "tests/unit/architecture-contracts.test.js"
+                                        }
+                       },
+                       {
+                           "id":  "offline-ui-loopback",
+                           "owner":  "offline-ui-server.js",
+                           "contract":  "Arquivos da UI offline são servidos por HTTP loopback; o servidor local não pertence ao transporte externo de sync.",
+                           "status":  "respected"
+                       }
+                   ],
+    "step74Extraction":  {
+                             "focus":  "remove-raw-sql-from-main",
+                             "status":  "completed",
+                             "newOfflineDbApis":  [
+                                                      "getOutboxStatusSummary",
+                                                      "listAuthorizedNfcePendingSync"
+                                                  ],
+                             "reusedOfflineDbApis":  [
+                                                         "listCashMovements",
+                                                         "listActiveProvisionedOfflineCredentials",
+                                                         "listPreparedOfflineCompanies",
+                                                         "enqueueOutboxOperation"
+                                                     ],
+                             "effects":  [
+                                             "finance snapshot deixa de consultar cash_movements diretamente no main",
+                                             "outboxStatusSummary deixa de consultar sync_outbox diretamente no main",
+                                             "enqueueAuthorizedNfceResultSync deixa de conhecer nfce_documents/fiscal_outbox/sync_outbox",
+                                             "resolução de empresa do operador deixa de conhecer offline_provisioned_credentials/offline_prepared_companies"
+                                         ]
+                         },
+    "remainingCandidates":  [
+
+                            ],
+    "observations":  [
+                         "A fronteira de abertura do SQLite está forte: somente offline-db/connection.js importa node:sqlite; migrations e transaction context têm owners internos separados.",
+                         "Após D13 a Etapa 6 fecha sem prepare() fora de offline-db/**; registerOfflineSaleAtomic pertence a offline-db/atomic/sale.js e a fachada permanece compatível.",
+                         "A fronteira renderer/privilegiado está forte no modo Electron atual: isolamento, sandbox e bridge explícito.",
+                         "A fronteira fiscal documento/transporte está separada no grafo estático.",
+                         "O transporte de sync é dedicado, com exceções de rede de propósito diferente explicitamente identificadas."
+                     ]
 }

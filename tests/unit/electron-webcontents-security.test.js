@@ -5,6 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const navigationPolicyModule =
+  require('../../desktop/security/navigation-policy');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const MAIN_SOURCE = fs.readFileSync(
@@ -33,7 +35,13 @@ function commonBlocks() {
     sliceBetween(
       MAIN_SOURCE,
       'let offlineUiServer = null;',
-      'let timerOfflineRuntime = null;'
+      'const offlineRendererRecoveryController ='
+    ) +
+    '\n' +
+    sliceBetween(
+      MAIN_SOURCE,
+      'const NAVIGATION_POLICY_CONTEXT =',
+      "let offlineUiMode = 'ONLINE';"
     )
   );
 }
@@ -91,6 +99,7 @@ function buildHarness() {
 
   const sandbox = {
     URL,
+    navigationPolicyModule,
     Object,
     String,
     log(...args) {
@@ -193,7 +202,7 @@ test('política de popup é deny-by-default nas duas superfícies', () => {
 
   for (const source of ['mainWindow', 'offlineView']) {
     for (const url of [
-      'https://jpiresoficial.wixstudio.com/e-fisco',
+      'https://plataforma.e-fisco.app/',
       'http://127.0.0.1:54321/pdv.html',
       'https://example.com/',
       'efisco-update://start',
@@ -289,7 +298,7 @@ test('offlineView permite somente origin runtime exato no main frame', () => {
   for (const url of [
     'http://127.0.0.1:54322/pdv.html',
     'http://localhost:54321/pdv.html',
-    'https://jpiresoficial.wixstudio.com/e-fisco',
+    'https://plataforma.e-fisco.app/',
     'https://evil.example/',
     'efisco-update://start',
     'data:text/html,hello',
@@ -454,7 +463,7 @@ test('handlers da offlineView são instalados antes do loadURL', () => {
     navPos
   );
   const loadPos = MAIN_SOURCE.indexOf(
-    'offlineView.webContents.loadURL(',
+    'await loadOfflineView({',
     ensureStart
   );
 
@@ -464,11 +473,11 @@ test('handlers da offlineView são instalados antes do loadURL', () => {
   assert.ok(loadPos > redirectPos);
 });
 
-test('existem exatamente dois setWindowOpenHandler ativos no main.js', () => {
+test('existem exatamente três setWindowOpenHandler ativos no main.js', () => {
   const matches =
     MAIN_SOURCE.match(/\.setWindowOpenHandler\s*\(/g) || [];
 
-  assert.equal(matches.length, 2);
+  assert.equal(matches.length, 3);
   assert.match(
     MAIN_SOURCE,
     /mainWindow\.webContents\.setWindowOpenHandler\s*\(/
@@ -476,5 +485,9 @@ test('existem exatamente dois setWindowOpenHandler ativos no main.js', () => {
   assert.match(
     MAIN_SOURCE,
     /offlineView\.webContents\.setWindowOpenHandler\s*\(/
+  );
+  assert.match(
+    MAIN_SOURCE,
+    /view\.webContents\s*\.setWindowOpenHandler\s*\(/
   );
 });

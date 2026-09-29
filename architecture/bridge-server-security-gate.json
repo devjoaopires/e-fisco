@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "release": "1.0.44",
+  "status": "completed",
+  "scope": "Etapa 3.7/8 - protocolo SCF, impressao/frame e servidor offline",
+  "gitReference": {
+    "branch": "main",
+    "head": "5f6e62eb3396",
+    "shortHead": "5f6e62e"
+  },
+  "productionChanges": false,
+  "scfProtocol": {
+    "test": "tests/unit/offline-bridge-contracts.test.js",
+    "shellLiteralNames": 45,
+    "sharedWithPdv": 44,
+    "shellOnly": [
+      "SCF_NFCE_NUMERACAO_ERRO"
+    ],
+    "senderGuard": {
+      "source": "iframe.contentWindow",
+      "origin": "loopback origin exato"
+    },
+    "criticalShapesCovered": [
+      "produto fiscal requestId/result",
+      "crediario detalhe requestId/result",
+      "financeiro requestId/result",
+      "numeracao NFC-e",
+      "venda offline registrada",
+      "emissao de contingencia"
+    ]
+  },
+  "printing": {
+    "test": "tests/unit/offline-bridge-contracts.test.js",
+    "topBridge": {
+      "trustedPdvOriginRequired": true,
+      "requestIdDeduplication": true,
+      "dedupTtlMs": 60000,
+      "responseTargetOriginPinned": true
+    },
+    "consoleFrameBridge": {
+      "trustedWebFrameMainRequired": true,
+      "pendingPayloadOneShot": true,
+      "payloadClearedBeforeEnqueue": true
+    }
+  },
+  "offlineUiServer": {
+    "test": "tests/integration/offline-ui-server-security.test.js",
+    "host": "127.0.0.1",
+    "allowedMethods": [
+      "GET",
+      "HEAD"
+    ],
+    "currentAllowlist": [
+      "/",
+      "/offline-shell.html",
+      "/pdv.html",
+      "/vendor/html2canvas-1.4.1.min.js",
+      "/vendor/qrcodejs-1.0.0.min.js"
+    ],
+    "headers": {
+      "htmlMime": "text/html; charset=utf-8",
+      "javascriptMime": "application/javascript; charset=utf-8",
+      "xContentTypeOptions": "nosniff",
+      "referrerPolicy": "no-referrer",
+      "cacheControl": "no-store, max-age=0"
+    },
+    "failClosed": [
+      "metodo diferente de GET/HEAD -> 405",
+      "rota desconhecida -> 404",
+      "path traversal -> 404",
+      "arquivo configurado fora de offline-ui -> excecao antes de listen",
+      "/pdv/bootstrap.js -> 404 enquanto P01 ainda nao foi implementado"
+    ],
+    "p01EvolutionRule": "Quando P01 liberar /pdv/**, este gate deve ser alterado no mesmo lote para exigir root confinement, extensoes/MIME permitidos e traversal fail-closed; nao basta trocar 404 por 200."
+  },
+  "validation": {
+    "targetedBridge": {
+      "tests": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "targetedServer": {
+      "tests": 4,
+      "passed": 4,
+      "failed": 0
+    },
+    "testUnit": {
+      "tests": 186,
+      "passed": 186,
+      "failed": 0
+    },
+    "testElectronSecurity": {
+      "tests": 58,
+      "passed": 58,
+      "failed": 0
+    },
+    "testIntegration": {
+      "tests": 59,
+      "passed": 59,
+      "failed": 0
+    },
+    "testArchitecture": {
+      "tests": 12,
+      "passed": 12,
+      "failed": 0
+    },
+    "fullSuite": {
+      "tests": 245,
+      "passed": 245,
+      "failed": 0,
+      "skipped": 0
+    },
+    "productionGapFound": false,
+    "testAuthoringIssueFoundAndFixed": "O teste de root confinement usou inicialmente assert.rejects para uma excecao sincrona; corrigido para assert.throws. A producao ja falhava fechado corretamente."
+  },
+  "architectureArtifacts": {
+    "boundaryContractsAdded": [
+      "scf-offline-protocol",
+      "printing-frame-marker-deduplication",
+      "offline-ui-server-static-security"
+    ],
+    "targetArchitectureCompleted": [
+      "SCF-protocol-contract",
+      "printing-frame-marker-deduplication",
+      "offline-ui-server-assets-path-traversal-mime"
+    ],
+    "remainingBaselineTestsInStage3": []
+  },
+  "nextStep": "3.8/8 - executar tudo novamente, reconciliar contagens/metadados e congelar o baseline oficial da Etapa 3."
+}

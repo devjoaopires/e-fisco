@@ -5,6 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const navigationPolicyModule =
+  require('../../desktop/security/navigation-policy');
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const MAIN_PATH = path.join(ROOT, 'main.js');
@@ -48,11 +50,18 @@ function buildHarness() {
     'const PRINTER_NAME ='
   );
 
-  const policyBlock = sliceBetween(
-    MAIN_SOURCE,
-    'let offlineUiServer = null;',
-    'let timerOfflineRuntime = null;'
-  );
+  const policyBlock =
+    sliceBetween(
+      MAIN_SOURCE,
+      'let offlineUiServer = null;',
+      'const offlineRendererRecoveryController ='
+    ) +
+    '\n' +
+    sliceBetween(
+      MAIN_SOURCE,
+      'const NAVIGATION_POLICY_CONTEXT =',
+      "let offlineUiMode = 'ONLINE';"
+    );
 
   const handlersBlock =
     navigationHandlersBlock(MAIN_SOURCE);
@@ -64,6 +73,7 @@ function buildHarness() {
 
   const sandbox = {
     URL,
+    navigationPolicyModule,
     Object,
     String,
     Promise,
@@ -89,7 +99,9 @@ function buildHarness() {
       updaterCalls += 1;
       return Promise.resolve();
     },
-    versaoAtualizacaoPendente: null,
+    getVersaoAtualizacaoPendente() {
+      return null;
+    },
     paginaAtualizacaoObrigatoria() {
       return 'data:text/html,update';
     }
@@ -172,18 +184,28 @@ function runWillRedirect(
   return prevented;
 }
 
-test('política da BrowserWindow permite somente o origin online confiável', () => {
+test('política da BrowserWindow permite somente os origins online confiáveis', () => {
   const { api } = buildHarness();
 
   assert.equal(
     api.policy.onlineOrigin,
-    'https://jpiresoficial.wixstudio.com'
+    'https://plataforma.e-fisco.app'
+  );
+
+  assert.deepEqual(
+    Array.from(api.policy.onlineOrigins),
+    [
+      'https://plataforma.e-fisco.app'
+    ]
   );
 
   for (const url of [
-    'https://jpiresoficial.wixstudio.com/e-fisco',
-    'https://jpiresoficial.wixstudio.com/outra-rota',
-    'https://jpiresoficial.wixstudio.com/a?x=1#hash'
+    'https://plataforma.e-fisco.app/app-home',
+    'https://plataforma.e-fisco.app/outra-rota',
+    'https://plataforma.e-fisco.app/a?x=1#hash',
+    'https://plataforma.e-fisco.app/',
+    'https://plataforma.e-fisco.app/login',
+    'https://plataforma.e-fisco.app/app?x=1#hash'
   ]) {
     assert.equal(
       api.classifyMainWindowNavigation(url).decision,
@@ -193,10 +215,15 @@ test('política da BrowserWindow permite somente o origin online confiável', ()
   }
 
   for (const url of [
+    'https://jpiresoficial.wixstudio.com/e-fisco',
     'http://jpiresoficial.wixstudio.com/e-fisco',
     'https://jpiresoficial.wixstudio.com:444/e-fisco',
     'https://jpiresoficial.wixstudio.com.evil.example/e-fisco',
     'https://user:pass@jpiresoficial.wixstudio.com/e-fisco',
+    'http://plataforma.e-fisco.app/',
+    'https://plataforma.e-fisco.app:444/',
+    'https://plataforma.e-fisco.app.evil.example/',
+    'https://user:pass@plataforma.e-fisco.app/',
     'https://example.com/',
     'about:blank',
     'javascript:alert(1)',
@@ -248,10 +275,19 @@ test('will-navigate permite same-origin e bloqueia destinos não confiáveis', (
   assert.equal(
     runWillNavigate(
       handler,
-      'https://jpiresoficial.wixstudio.com/e-fisco'
+      'https://plataforma.e-fisco.app/'
     ),
     0
   );
+
+  assert.equal(
+    runWillNavigate(
+      handler,
+      'https://plataforma.e-fisco.app/'
+    ),
+    0
+  );
+
   assert.equal(logs.length, 0);
   assert.equal(counters().updaterCalls, 0);
 
@@ -314,7 +350,7 @@ test('event.url moderno tem precedência sobre argumento legado', () => {
 
   const prevented = runWillNavigate(
     handlers['will-navigate'],
-    'https://jpiresoficial.wixstudio.com/e-fisco',
+    'https://plataforma.e-fisco.app/',
     {
       url: 'https://evil.example/'
     }
@@ -337,10 +373,10 @@ test('will-redirect protege main frame sem bloquear subframes', () => {
   assert.equal(
     runWillRedirect(
       handler,
-      'https://jpiresoficial.wixstudio.com/redirect-ok',
+      'https://plataforma.e-fisco.app/',
       true,
       {
-        url: 'https://jpiresoficial.wixstudio.com/redirect-ok',
+        url: 'https://plataforma.e-fisco.app/',
         isMainFrame: true
       }
     ),
@@ -483,4 +519,189 @@ test('regressão estática não reintroduz validação loopback por prefixo', ()
     MAIN_SOURCE,
     /logBlockedMainWindowNavigation\(/
   );
+});
+
+
+test('frame moderno tem precedência sobre flag legada e fallback permanece conservador', () => {
+  const resolve =
+    navigationPolicyModule.resolveNavigationEventIsMainFrame;
+
+  assert.equal(
+    resolve(
+      {
+        isMainFrame: false
+      },
+      true
+    ),
+    false
+  );
+
+  assert.equal(
+    resolve(
+      {
+        isMainFrame: true
+      },
+      false
+    ),
+    true
+  );
+
+  assert.equal(
+    resolve(
+      {},
+      false
+    ),
+    false
+  );
+
+  assert.equal(
+    resolve(
+      {},
+      undefined
+    ),
+    true
+  );
+});
+
+test('origin offline acompanha a porta runtime atual e invalida origin antigo', () => {
+  let offlineOrigin =
+    'http://127.0.0.1:54321';
+
+  const context =
+    navigationPolicyModule.createNavigationPolicyContext({
+      onlineUrl:
+        'https://plataforma.e-fisco.app/',
+      internalUpdateNavigationUrl:
+        'efisco-update://start',
+      getOfflineOrigin() {
+        return offlineOrigin;
+      }
+    });
+
+  assert.equal(
+    navigationPolicyModule
+      .classifyOfflineViewNavigation(
+        'http://127.0.0.1:54321/pdv.html',
+        context
+      )
+      .decision,
+    'ALLOW'
+  );
+
+  offlineOrigin =
+    'http://127.0.0.1:65432';
+
+  assert.equal(
+    navigationPolicyModule
+      .classifyOfflineViewNavigation(
+        'http://127.0.0.1:54321/pdv.html',
+        context
+      )
+      .decision,
+    'BLOCK'
+  );
+
+  assert.equal(
+    navigationPolicyModule
+      .classifyOfflineViewNavigation(
+        'http://127.0.0.1:65432/pdv.html',
+        context
+      )
+      .decision,
+    'ALLOW'
+  );
+});
+
+test('sanitização preserva somente marcador seguro do comando interno e de schemes desconhecidos', () => {
+  const context =
+    navigationPolicyModule.createNavigationPolicyContext({
+      onlineUrl:
+        'https://plataforma.e-fisco.app/',
+      internalUpdateNavigationUrl:
+        'efisco-update://start',
+      getOfflineOrigin() {
+        return 'http://127.0.0.1:54321';
+      }
+    });
+
+  assert.equal(
+    navigationPolicyModule
+      .sanitizeNavigationUrlForLog(
+        'efisco-update://start',
+        context
+      ),
+    'efisco-update://start'
+  );
+
+  assert.equal(
+    navigationPolicyModule
+      .sanitizeNavigationUrlForLog(
+        'mailto:secret@example.com?subject=TOPSECRET',
+        context
+      ),
+    'mailto:'
+  );
+});
+
+test('popup mantém deny com razão determinística por superfície e target', () => {
+  const context =
+    navigationPolicyModule.createNavigationPolicyContext({
+      onlineUrl:
+        'https://plataforma.e-fisco.app/',
+      internalUpdateNavigationUrl:
+        'efisco-update://start',
+      getOfflineOrigin() {
+        return 'http://127.0.0.1:54321';
+      }
+    });
+
+  const cases = [
+    [
+      {
+        source: 'mainWindow',
+        url: 'https://plataforma.e-fisco.app/'
+      },
+      'ONLINE_POPUP_DENIED'
+    ],
+    [
+      {
+        source: 'offlineView',
+        url: 'http://127.0.0.1:54321/pdv.html'
+      },
+      'OFFLINE_POPUP_DENIED'
+    ],
+    [
+      {
+        source: 'mainWindow',
+        url: 'efisco-update://start'
+      },
+      'INTERNAL_COMMAND_POPUP_DENIED'
+    ],
+    [
+      {
+        source: 'unknown-surface',
+        url: 'https://evil.example/'
+      },
+      'UNTRUSTED_WINDOW_TARGET'
+    ]
+  ];
+
+  for (const [input, reason] of cases) {
+    const result =
+      navigationPolicyModule
+        .classifyRendererWindowOpen(
+          input,
+          context
+        );
+
+    assert.equal(
+      result.action,
+      'deny'
+    );
+
+    assert.equal(
+      result.reason,
+      reason
+    );
+  }
 });

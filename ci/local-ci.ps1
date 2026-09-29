@@ -116,7 +116,7 @@ function Ensure-PortableNode {
 Push-Location $root
 try {
   Write-Step 'Toolchain local'
-  $npmPath = Ensure-PortableNode -Version $NodeVersion
+  $npmPath = @(Ensure-PortableNode -Version $NodeVersion)[-1]
 
   Invoke-Checked -FilePath (Join-Path (Split-Path $npmPath -Parent) 'node.exe') -Arguments @('--version') -Label 'node --version'
   Invoke-Checked -FilePath $npmPath -Arguments @('--version') -Label 'npm --version'
